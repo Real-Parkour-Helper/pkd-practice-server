@@ -1,0 +1,18 @@
+[
+    {
+        "modid": "pkd-room-scanner",
+        "name": "PKD Room Scanner",
+        "description": "PKD-Practice-Server Room Scanner Util",
+        "version": "${version}",
+        "mcversion": "${mcversion}",
+        "url": "",
+        "updateUrl": "",
+        "authorList": [
+            "@_spqghett1"
+        ],
+        "credits": "",
+        "logoFile": "",
+        "screenshots": [],
+        "dependencies": []
+    }
+]
