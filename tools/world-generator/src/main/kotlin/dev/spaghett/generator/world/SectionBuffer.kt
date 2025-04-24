@@ -27,6 +27,6 @@ class SectionBuffer(val y: Int) {
         putByteArray("Blocks", blocks)
         putByteArray("Data", data)
         putByteArray("BlockLight", ByteArray(2048))
-        putByteArray("SkyLight", ByteArray(2048))
+        putByteArray("SkyLight", ByteArray(2048) { 0xFF.toByte() })
     }
 }
