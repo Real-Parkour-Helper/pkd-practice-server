@@ -6,12 +6,15 @@ import dev.spaghett.roomsplugin.commands.RoomCommand
 import dev.spaghett.shared.*
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
+import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.util.Vector
 
 class RoomsPlugin : JavaPlugin(), Listener {
@@ -20,6 +23,7 @@ class RoomsPlugin : JavaPlugin(), Listener {
 
     private var checkpointTrackers: MutableMap<String, CheckpointTracker> = mutableMapOf() // player.name -> CheckpointTracker
     private var boostTrackers = mutableMapOf<String, BoostTracker>() // player.name -> ParkourBoost
+    private var parkourInventories = mutableMapOf<String, ParkourInventory>() // player.name -> ParkourInventory
 
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this)
@@ -41,13 +45,56 @@ class RoomsPlugin : JavaPlugin(), Listener {
 
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
-        moveToRoom(event.player, roomList[0])
+        println("Player ${event.player.name} has joined the game.")
+        moveToRoom(event.player, roomList[0], true)
 
         boostTrackers[event.player.name] = BoostTracker(
             event.player,
             1000L
         ) {
             println("Player ${event.player.name} boosted!")
+        }
+
+        parkourInventories[event.player.name] = ParkourInventory(event.player) { item ->
+            when (item.type) {
+                Material.FEATHER -> {
+                    // Boost the player
+                    boostTrackers[event.player.name]?.tryBoost()
+                }
+                Material.GOLD_PLATE -> {
+                    // Reset to the last checkpoint
+                    checkpointTrackers[event.player.name]?.tpToLastCheckpoint()
+                    event.player.sendMessage("§aReset you to your last checkpoint.")
+                }
+                Material.REDSTONE_BLOCK -> {
+                    // Reset to the start
+                    checkpointTrackers[event.player.name]?.reset()
+                    checkpointTrackers[event.player.name]?.tpToLastCheckpoint()
+                    event.player.sendMessage("§aYou have been reset to the start.")
+                }
+                else -> {
+                    // Do nothing
+                }
+            }
+        }
+        Bukkit.getPluginManager().registerEvents(parkourInventories[event.player.name], this)
+        parkourInventories[event.player.name]?.setupParkourInventory()
+    }
+
+    @EventHandler
+    fun onPlayerQuit(event: PlayerQuitEvent) {
+        println("Player ${event.player.name} has left the game.")
+        // Stop the checkpoint tracker if it exists
+        checkpointTrackers[event.player.name]?.stop()
+        checkpointTrackers.remove(event.player.name)
+
+        // Stop the boost tracker if it exists
+        boostTrackers.remove(event.player.name)
+
+        // Remove the parkour inventory if it exists
+        parkourInventories[event.player.name]?.let {
+            HandlerList.unregisterAll(it)
+            parkourInventories.remove(event.player.name)
         }
     }
 
@@ -83,13 +130,13 @@ class RoomsPlugin : JavaPlugin(), Listener {
     /**
      * Teleport the player to the specified room.
      */
-    fun moveToRoom(player: Player, roomName: String) {
+    fun moveToRoom(player: Player, roomName: String, force: Boolean = false) {
         if (!roomList.contains(roomName)) {
             player.sendMessage("§cRoom §l$roomName§r§c not found.")
             return
         }
 
-        if (currentRoom[player.name] == roomName) {
+        if (currentRoom[player.name] == roomName && !force) {
             player.sendMessage("§cYou are already in this room.")
             return
         }
