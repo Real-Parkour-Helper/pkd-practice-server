@@ -1,0 +1,25 @@
+**/cache
+**/logs
+
+**/world_nether
+**/world_the_end
+
+
+**/world/data
+**/world/playerdata
+**/world/stats
+**/world/level.dat_old
+**/world/uid.dat
+**/world/session.lock
+
+**/plugins/PluginMetrics
+
+**/banned-ips.json
+**/banned-players.json
+
+**/ops.json
+**/usercache.json
+**/whitelist.json
+
+# A script will have to download this on initial setup
+**/paper-1.8.8-445.jar
