@@ -1,4 +1,4 @@
-package dev.spaghett.scanner
+package dev.spaghett.shared
 
 data class BlockStructure(
     val palette: MutableMap<String, Int>,  // "0" to "minecraft:stone"

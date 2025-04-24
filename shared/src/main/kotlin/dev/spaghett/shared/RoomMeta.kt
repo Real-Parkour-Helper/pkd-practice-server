@@ -1,4 +1,4 @@
-package dev.spaghett.scanner
+package dev.spaghett.shared
 
 data class RoomMeta(
     val name: String,
