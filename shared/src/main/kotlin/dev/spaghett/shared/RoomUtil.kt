@@ -1,9 +1,11 @@
 package dev.spaghett.shared
 
 import com.google.gson.Gson
+import org.bukkit.Location
+import org.bukkit.entity.Player
 import java.io.InputStreamReader
 
-object RoomLoader {
+object RoomUtil {
     private val gson = Gson()
 
     /**
@@ -23,5 +25,18 @@ object RoomLoader {
         blocksReader.close()
 
         return Pair(meta, blocks)
+    }
+
+    fun roomsToCheckpointLocations(player: Player, rooms: List<RoomMeta>): MutableList<Location> {
+        val list = mutableListOf<Location>()
+        rooms.forEachIndexed { index, roomMeta ->
+            val zOffset = index * 57
+
+            for (checkpoint in roomMeta.checkpoints) {
+                val location = Location(player.world, checkpoint.x.toDouble() + 0.5, checkpoint.y.toDouble(), checkpoint.z.toDouble() + 0.5 + zOffset)
+                list.add(location)
+            }
+        }
+        return list
     }
 }
