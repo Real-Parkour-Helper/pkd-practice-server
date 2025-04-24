@@ -21,3 +21,5 @@ pluginManagement {
 include("shared")
 include("tools:world-generator")
 include("tools:room-scanner")
+
+include("plugins:shared-plugin")

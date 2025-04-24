@@ -1,0 +1,16 @@
+name: SharedPlugin
+version: 1.0.0
+main: dev.spaghett.sharedplugin.SharedPlugin
+description: PKD Practice Server shared logic plugin
+author: _Spqghett1
+website: https://github.com/Real-Parkour-Helper
+
+commands:
+  lobby:
+    description: Sends you to the lobby
+    usage: /lobby
+    aliases: [lobby, l]
+  rooms:
+    description: Sends you to the room practice server
+    usage: /rooms
+    aliases: [rooms, r]
