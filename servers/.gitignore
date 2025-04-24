@@ -12,6 +12,13 @@
 **/world/uid.dat
 **/world/session.lock
 
+# Generated from region.default
+**/world/region
+
+# Generated from level.dat.default
+**/world/level.dat
+
+
 **/plugins/PluginMetrics
 
 **/banned-ips.json
@@ -20,6 +27,12 @@
 **/ops.json
 **/usercache.json
 **/whitelist.json
+
+# Generated from .default files
+**/server.properties
+**/spigot.yml
+**/paper.yml
+**/bukkit.yml
 
 # A script will have to download this on initial setup
 **/paper-1.8.8-445.jar

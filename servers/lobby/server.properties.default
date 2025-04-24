@@ -1,5 +1,3 @@
-#Minecraft server properties
-#Thu Apr 24 13:47:46 CEST 2025
 generator-settings=
 op-permission-level=4
 resource-pack-hash=
@@ -22,10 +20,10 @@ white-list=false
 spawn-animals=true
 snooper-enabled=true
 hardcore=false
-online-mode=false
+online-mode=true
 resource-pack=
-pvp=false
-difficulty=1
+pvp=true
+difficulty=0
 enable-command-block=false
 player-idle-timeout=0
 gamemode=2

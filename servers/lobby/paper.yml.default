@@ -1,10 +1,10 @@
 # This is the main configuration file for PaperSpigot.
 # As you can see, there's tons to configure. Some options may impact gameplay, so use
 # with caution, and make sure you know what each option does before configuring.
-# 
+#
 # If you need help with the configuration or have any questions related to PaperSpigot,
 # join us at the IRC.
-# 
+#
 # IRC: #paperspigot @ irc.spi.gt ( http://irc.spi.gt/iris/?channels=PaperSpigot )
 
 config-version: 9
