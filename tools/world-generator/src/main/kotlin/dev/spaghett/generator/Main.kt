@@ -3,6 +3,13 @@ package dev.spaghett.generator
 import com.google.gson.Gson
 import io.javalin.Javalin
 
+import dev.spaghett.shared.GeneratedSeed
+
+data class BuildRequest(
+    val seed: GeneratedSeed?,
+    val worldDir: String?
+)
+
 fun main() {
     val gson = Gson()
     val roomGenerator = RoomGenerator()
@@ -27,6 +34,25 @@ fun main() {
                 ctx.json(json)
             } catch (e: IllegalArgumentException) {
                 ctx.status(400).result("Invalid room count: $roomCount")
+            }
+        }
+        .post("/buildMap") { ctx ->
+            val body = ctx.body()
+            val parsed = gson.fromJson(body, BuildRequest::class.java)
+
+            val seed = parsed.seed
+            val worldDir = parsed.worldDir
+
+            if (seed == null || worldDir == null) {
+                ctx.status(400).result("Invalid request: seed and worldDir are required")
+                return@post
+            }
+
+            try {
+                roomGenerator.buildMap(seed, worldDir)
+                ctx.result("Map built successfully")
+            } catch (e: Exception) {
+                ctx.status(500).result("Error building map: ${e.message}")
             }
         }
         .start(8080)

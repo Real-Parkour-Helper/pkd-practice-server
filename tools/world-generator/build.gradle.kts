@@ -12,6 +12,7 @@ version = "1.0"
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -20,6 +21,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation("com.google.code.gson:gson:2.13.0")
+
+    implementation("com.github.Querz:NBT:6.1")
 
     implementation(project(":shared"))
 }

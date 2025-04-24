@@ -1,6 +1,16 @@
 package dev.spaghett.generator
 
+import com.google.gson.Gson
+import dev.spaghett.generator.world.WorldBuffer
+import dev.spaghett.generator.world.blockIDs
+import dev.spaghett.shared.BlockStructure
+import dev.spaghett.shared.GeneratedSeed
+import dev.spaghett.shared.RoomMeta
+import net.querz.mca.Chunk
+import net.querz.nbt.io.NBTUtil
+import net.querz.nbt.tag.CompoundTag
 import java.io.File
+import java.io.InputStreamReader
 import kotlin.random.Random
 
 class RoomGenerator {
@@ -20,11 +30,7 @@ class RoomGenerator {
         "triple_trapdoor", "underbridge"
     )
 
-    class GeneratedSeed(
-        val seed: String,
-        val roomCount: Int,
-        val rooms: List<String>
-    )
+    private val gson = Gson()
 
     /**
      * Picks a set amount of rooms, optionally using a set seed.
@@ -39,6 +45,95 @@ class RoomGenerator {
         val rng = Random(seedToUse)
         val selectedRooms = roomList.shuffled(rng).take(roomCount)
         return GeneratedSeed(seedToUse.toString(), roomCount, selectedRooms)
+    }
+
+    /**
+     * Builds the map from a given generated seed.
+     */
+    fun buildMap(seed: GeneratedSeed, worldDir: String) {
+        val rooms = seed.rooms.map { readRoom(it) }
+
+        val worldBuffer = WorldBuffer()
+
+        var currentRoomZ = 0
+
+        for ((roomMeta, blocks) in rooms) {
+            val palette = blocks.palette
+            val reversePalette: Map<Int, String> = palette.entries.associate { (k, v) -> v to k }
+
+            for (block in blocks.blocks) {
+                val x = block.x
+                val y = block.y
+                val z = block.z + currentRoomZ
+
+                val blockName = reversePalette[block.id] ?: continue
+                val blockId = blockIDs[blockName] ?: continue
+
+                val blockMeta = block.meta.toByte()
+                val blockIdByte = blockId.toByte()
+                worldBuffer.setBlock(x, y, z, blockIdByte, blockMeta)
+            }
+
+            currentRoomZ += roomMeta.depth
+        }
+
+        val regionFolder = File(worldDir, "region")
+        regionFolder.mkdirs()
+        worldBuffer.writeAllRegions(regionFolder)
+
+        writeLevelDat(worldDir)
+    }
+
+    /**
+     * Writes the level.dat file.
+     */
+    private fun writeLevelDat(worldDir: String) {
+        val data = CompoundTag().apply {
+            putLong("RandomSeed", 123456789L)
+            putString("generatorName", "flat")
+            putInt("generatorVersion", 0)
+            putString("generatorOptions", "")
+            putInt("GameType", 1) // 0: Survival, 1: Creative
+            putInt("SpawnX", 0)
+            putInt("SpawnY", 65)
+            putInt("SpawnZ", 0)
+            putString("LevelName", "dynamic rooms")
+            putInt("version", 19133) // For 1.12.2 style level.dat
+            putLong("LastPlayed", System.currentTimeMillis())
+            putInt("SizeOnDisk", 0)
+            putInt("DayTime", 0)
+            putInt("Time", 0)
+            putInt("allowCommands", 1)
+            putInt("MapFeatures", 1)
+            putInt("hardcore", 0)
+            putInt("raining", 0)
+            putInt("thundering", 0)
+        }
+
+        val root = CompoundTag().apply {
+            put("Data", data)
+        }
+
+        NBTUtil.write(root, File(worldDir, "level.dat"))
+    }
+
+
+    /**
+     * Reads a room from the resources folder.
+     */
+    private fun readRoom(roomName: String): Pair<RoomMeta, BlockStructure> {
+        val loader = javaClass.classLoader
+        val stream = loader.getResourceAsStream("pkd-rooms/${roomName}/meta.json")
+
+        val metaReader = InputStreamReader(stream!!, Charsets.UTF_8)
+        val meta = gson.fromJson(metaReader, RoomMeta::class.java)
+        metaReader.close()
+
+        val blocksReader = InputStreamReader(loader.getResourceAsStream("pkd-rooms/${roomName}/blocks.json")!!, Charsets.UTF_8)
+        val blocks = gson.fromJson(blocksReader, BlockStructure::class.java)
+        blocksReader.close()
+
+        return Pair(meta, blocks)
     }
 
 }
