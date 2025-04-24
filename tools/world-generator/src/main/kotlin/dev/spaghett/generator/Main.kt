@@ -7,7 +7,8 @@ import dev.spaghett.shared.GeneratedSeed
 
 data class BuildRequest(
     val seed: GeneratedSeed?,
-    val worldDir: String?
+    val worldDir: String?,
+    val resetCheckpoints: Boolean = false
 )
 
 fun main() {
@@ -42,6 +43,7 @@ fun main() {
 
             val seed = parsed.seed
             val worldDir = parsed.worldDir
+            val resetCheckpoints = parsed.resetCheckpoints
 
             if (seed == null || worldDir == null) {
                 ctx.status(400).result("Invalid request: seed and worldDir are required")
@@ -49,7 +51,7 @@ fun main() {
             }
 
             try {
-                roomGenerator.buildMap(seed, worldDir)
+                roomGenerator.buildMap(seed, worldDir, resetCheckpoints)
                 ctx.result("Map built successfully")
             } catch (e: Exception) {
                 ctx.status(500).result("Error building map: ${e.message}")

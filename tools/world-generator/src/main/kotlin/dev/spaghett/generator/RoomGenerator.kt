@@ -50,7 +50,7 @@ class RoomGenerator {
     /**
      * Builds the map from a given generated seed.
      */
-    fun buildMap(seed: GeneratedSeed, worldDir: String) {
+    fun buildMap(seed: GeneratedSeed, worldDir: String, resetCheckpoints: Boolean) {
         val rooms = seed.rooms.map { readRoom(it) }
 
         val worldBuffer = WorldBuffer()
@@ -91,6 +91,10 @@ class RoomGenerator {
             }
 
             currentRoomZ += roomMeta.depth
+
+            if (resetCheckpoints) {
+                currentCheckpoint = 1
+            }
         }
 
         val regionFolder = File(worldDir, "region")
