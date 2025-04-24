@@ -1,10 +1,9 @@
 package dev.spaghett.roomsplugin
 
-import dev.spaghett.shared.ParkourRun
 import dev.spaghett.roomsplugin.commands.NextRoomCommand
 import dev.spaghett.roomsplugin.commands.PrevRoomCommand
 import dev.spaghett.roomsplugin.commands.RoomCommand
-import dev.spaghett.shared.RoomUtil
+import dev.spaghett.shared.*
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.entity.Player
@@ -12,7 +11,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.plugin.java.JavaPlugin
-import dev.spaghett.shared.roomList
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.util.Vector
 
@@ -20,7 +18,8 @@ class RoomsPlugin : JavaPlugin(), Listener {
     private val startPosition = Triple(18.5, 8.0, 2.5)
     private var currentRoom = mutableMapOf<String, String>()
 
-    private var parkourRun: ParkourRun? = null
+    private var checkpointTrackers: MutableMap<String, CheckpointTracker> = mutableMapOf() // player.name -> CheckpointTracker
+    private var boostTrackers = mutableMapOf<String, BoostTracker>() // player.name -> ParkourBoost
 
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this)
@@ -32,18 +31,6 @@ class RoomsPlugin : JavaPlugin(), Listener {
         getCommand("prevroom")?.executor = PrevRoomCommand(this)
 
         Bukkit.getScheduler().runTaskTimer(this, {
-            if (parkourRun == null) {
-                for (player in Bukkit.getOnlinePlayers()) {
-                    if (player.location.y < 0) {
-                        // Do something, like teleport to spawn
-                        val roomName = currentRoom[player.name]
-                        val zOffset = roomList.indexOf(roomName) * 57
-                        val newLocation = Location(player.world, startPosition.first, startPosition.second, startPosition.third + zOffset)
-                        player.teleport(newLocation)
-                    }
-                }
-            }
-
             // Permanently nice weather
             val world = Bukkit.getWorld("world")
             world?.setStorm(false)
@@ -55,6 +42,13 @@ class RoomsPlugin : JavaPlugin(), Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
         moveToRoom(event.player, roomList[0])
+
+        boostTrackers[event.player.name] = BoostTracker(
+            event.player,
+            1000L
+        ) {
+            println("Player ${event.player.name} boosted!")
+        }
     }
 
     @EventHandler
@@ -100,6 +94,10 @@ class RoomsPlugin : JavaPlugin(), Listener {
             return
         }
 
+        // Cancel any existing checkpoint tracker for this player
+        checkpointTrackers[player.name]?.stop()
+        checkpointTrackers.remove(player.name)
+
         currentRoom[player.name] = roomName
         val zOffset = roomList.indexOf(roomName) * 57
         val newLocation = Location(player.world, startPosition.first, startPosition.second, startPosition.third + zOffset)
@@ -119,27 +117,26 @@ class RoomsPlugin : JavaPlugin(), Listener {
         player.sendMessage("§aYou have been teleported to §l$formattedName§r§a.")
 
         val checkpoints = RoomUtil.roomsToCheckpointLocations(player, listOf(RoomUtil.loadRoom(roomName).first))
+        checkpoints.forEach {
+            it.add(Location(player.world, 0.0, 0.0, zOffset.toDouble()))
+        }
+
         val nList = mutableListOf(newLocation)
         nList.addAll(checkpoints)
 
-        parkourRun = ParkourRun(
+        checkpointTrackers[player.name] = CheckpointTracker(
             this,
             player,
             nList,
-            0L,
-            ::onCheckpoint,
-            ::onFinish
+            { checkpoint ->
+                println("Player ${player.name} reached checkpoint $checkpoint")
+            },
+            { ->
+                println("Player ${player.name} finished the parkour run!")
+                checkpointTrackers[player.name]?.reset()
+            }
         )
-        parkourRun?.start()
-    }
 
-    private fun onCheckpoint(checkpoint: Int) {
-        println("Checkpoint reached: $checkpoint")
-    }
-
-    private fun onFinish() {
-        println("Parkour run finished!")
-        parkourRun?.stop()
-        parkourRun = null
+        checkpointTrackers[player.name]?.start()
     }
 }
