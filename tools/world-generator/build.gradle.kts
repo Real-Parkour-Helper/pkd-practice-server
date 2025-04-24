@@ -7,6 +7,9 @@ application {
     mainClass.set("dev.spaghett.generator.MainKt")
 }
 
+group = "dev.spaghett"
+version = "1.0"
+
 repositories {
     mavenCentral()
 }
@@ -17,6 +20,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation("com.google.code.gson:gson:2.13.0")
+
+    implementation(project(":shared"))
 }
 
 kotlin {
