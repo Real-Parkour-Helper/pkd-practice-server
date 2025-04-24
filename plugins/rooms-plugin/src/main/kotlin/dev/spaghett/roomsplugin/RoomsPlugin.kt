@@ -1,8 +1,10 @@
 package dev.spaghett.roomsplugin
 
+import dev.spaghett.shared.ParkourRun
 import dev.spaghett.roomsplugin.commands.NextRoomCommand
 import dev.spaghett.roomsplugin.commands.PrevRoomCommand
 import dev.spaghett.roomsplugin.commands.RoomCommand
+import dev.spaghett.shared.RoomUtil
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.entity.Player
@@ -18,6 +20,8 @@ class RoomsPlugin : JavaPlugin(), Listener {
     private val startPosition = Triple(18.5, 8.0, 2.5)
     private var currentRoom = mutableMapOf<String, String>()
 
+    private var parkourRun: ParkourRun? = null
+
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this)
         server.messenger.registerOutgoingPluginChannel(this, "BungeeCord")
@@ -28,13 +32,15 @@ class RoomsPlugin : JavaPlugin(), Listener {
         getCommand("prevroom")?.executor = PrevRoomCommand(this)
 
         Bukkit.getScheduler().runTaskTimer(this, {
-            for (player in Bukkit.getOnlinePlayers()) {
-                if (player.location.y < 0) {
-                    // Do something, like teleport to spawn
-                    val roomName = currentRoom[player.name]
-                    val zOffset = roomList.indexOf(roomName) * 57
-                    val newLocation = Location(player.world, startPosition.first, startPosition.second, startPosition.third + zOffset)
-                    player.teleport(newLocation)
+            if (parkourRun == null) {
+                for (player in Bukkit.getOnlinePlayers()) {
+                    if (player.location.y < 0) {
+                        // Do something, like teleport to spawn
+                        val roomName = currentRoom[player.name]
+                        val zOffset = roomList.indexOf(roomName) * 57
+                        val newLocation = Location(player.world, startPosition.first, startPosition.second, startPosition.third + zOffset)
+                        player.teleport(newLocation)
+                    }
                 }
             }
 
@@ -111,5 +117,29 @@ class RoomsPlugin : JavaPlugin(), Listener {
 
         val formattedName = roomName.split("_").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
         player.sendMessage("§aYou have been teleported to §l$formattedName§r§a.")
+
+        val checkpoints = RoomUtil.roomsToCheckpointLocations(player, listOf(RoomUtil.loadRoom(roomName).first))
+        val nList = mutableListOf(newLocation)
+        nList.addAll(checkpoints)
+
+        parkourRun = ParkourRun(
+            this,
+            player,
+            nList,
+            0L,
+            ::onCheckpoint,
+            ::onFinish
+        )
+        parkourRun?.start()
+    }
+
+    private fun onCheckpoint(checkpoint: Int) {
+        println("Checkpoint reached: $checkpoint")
+    }
+
+    private fun onFinish() {
+        println("Parkour run finished!")
+        parkourRun?.stop()
+        parkourRun = null
     }
 }
