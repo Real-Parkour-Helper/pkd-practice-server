@@ -7,7 +7,6 @@ import dev.spaghett.shared.*
 import net.querz.nbt.io.NBTUtil
 import net.querz.nbt.tag.CompoundTag
 import java.io.File
-import java.io.InputStreamReader
 import kotlin.random.Random
 
 class RoomGenerator {
@@ -33,7 +32,7 @@ class RoomGenerator {
      * Builds the map from a given generated seed.
      */
     fun buildMap(seed: GeneratedSeed, worldDir: String, resetCheckpoints: Boolean) {
-        val rooms = seed.rooms.map { RoomLoader.loadRoom(it) }
+        val rooms = seed.rooms.map { RoomUtil.loadRoom(it) }
 
         val worldBuffer = WorldBuffer()
 
