@@ -11,11 +11,16 @@ import net.querz.nbt.tag.ListTag
 class ChunkBuffer(private val chunkX: Int, private val chunkZ: Int) {
 
     private val sections = mutableMapOf<Int, SectionBuffer>()
+    private val entities = mutableListOf<CompoundTag>()
 
     fun setBlock(x: Int, y: Int, z: Int, id: Byte, meta: Byte) {
         val sectionY = y shr 4
         val section = sections.getOrPut(sectionY) { SectionBuffer(sectionY) }
         section.setBlock(x, y and 15, z, id, meta)
+    }
+
+    fun addEntity(entity: CompoundTag) {
+        entities.add(entity)
     }
 
     fun toChunk(): Chunk {
@@ -25,11 +30,15 @@ class ChunkBuffer(private val chunkX: Int, private val chunkZ: Int) {
             sectionTags.add(section.toTag())
         }
 
+        val entityTags = ListTag(CompoundTag::class.java).apply {
+            addAll(entities)
+        }
+
         val level = CompoundTag().apply {
             put("Sections", sectionTags)
             putInt("xPos", chunkX)
             putInt("zPos", chunkZ)
-            put("Entities", ListTag(CompoundTag::class.java))
+            put("Entities", entityTags)
             put("TileEntities", ListTag(CompoundTag::class.java))
             putByte("TerrainPopulated", 1)
         }

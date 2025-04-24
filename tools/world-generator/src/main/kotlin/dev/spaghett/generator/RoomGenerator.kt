@@ -16,16 +16,16 @@ import kotlin.random.Random
 class RoomGenerator {
 
     private val roomList = listOf(
-        "around_pillars",  "blocks",
-        "castle_wall",     "early_3+1",
-        "fences",          "fence_squeeze",
-        "fortress",        "four_towers",
-        "ice",             "ladder_slide",
-        "ladder_tower",    "overhead_4b",
-        "quartz_climb",    "quartz_temple",
-        "rng_skip",        "sandpit",
-        "scatter",         "slime_scatter",
-        "slime_skip",      "tightrope",
+        "around_pillars", "blocks",
+        "castle_wall", "early_3+1",
+        "fences", "fence_squeeze",
+        "fortress", "four_towers",
+        "ice", "ladder_slide",
+        "ladder_tower", "overhead_4b",
+        "quartz_climb", "quartz_temple",
+        "rng_skip", "sandpit",
+        "scatter", "slime_scatter",
+        "slime_skip", "tightrope",
         "tower_tightrope", "triple_platform",
         "triple_trapdoor", "underbridge"
     )
@@ -56,6 +56,7 @@ class RoomGenerator {
         val worldBuffer = WorldBuffer()
 
         var currentRoomZ = 0
+        var currentCheckpoint = 1
 
         for ((roomMeta, blocks) in rooms) {
             val palette = blocks.palette
@@ -72,6 +73,21 @@ class RoomGenerator {
                 val blockMeta = block.meta.toByte()
                 val blockIdByte = blockId.toByte()
                 worldBuffer.setBlock(x, y, z, blockIdByte, blockMeta)
+            }
+
+            for (checkpoint in roomMeta.checkpoints) {
+                val x = checkpoint.x
+                val baseY = checkpoint.y
+                val z = checkpoint.z + currentRoomZ
+
+                // First line: CHECKPOINT (green + bold)
+                val nameTop = "§a§lCHECKPOINT"
+                // Second line: #X (yellow + bold)
+                val nameBottom = "§e§l#${currentCheckpoint++}"
+
+                // Offset the Y to stack them nicely above the checkpoint block
+                worldBuffer.addNametag(x.toDouble(), baseY + 0.5, z.toDouble(), nameTop)
+                worldBuffer.addNametag(x.toDouble(), baseY + 0.2, z.toDouble(), nameBottom)
             }
 
             currentRoomZ += roomMeta.depth
@@ -129,7 +145,8 @@ class RoomGenerator {
         val meta = gson.fromJson(metaReader, RoomMeta::class.java)
         metaReader.close()
 
-        val blocksReader = InputStreamReader(loader.getResourceAsStream("pkd-rooms/${roomName}/blocks.json")!!, Charsets.UTF_8)
+        val blocksReader =
+            InputStreamReader(loader.getResourceAsStream("pkd-rooms/${roomName}/blocks.json")!!, Charsets.UTF_8)
         val blocks = gson.fromJson(blocksReader, BlockStructure::class.java)
         blocksReader.close()
 

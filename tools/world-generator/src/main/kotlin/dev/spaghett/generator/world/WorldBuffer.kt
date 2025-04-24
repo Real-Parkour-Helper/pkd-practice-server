@@ -1,6 +1,9 @@
 package dev.spaghett.generator.world
 
 import net.querz.mca.MCAFile
+import net.querz.nbt.tag.CompoundTag
+import net.querz.nbt.tag.DoubleTag
+import net.querz.nbt.tag.ListTag
 import java.io.File
 import java.io.RandomAccessFile
 
@@ -14,6 +17,29 @@ class WorldBuffer {
 
         val chunk = chunks.getOrPut(chunkKey) { ChunkBuffer(chunkX, chunkZ) }
         chunk.setBlock(x and 15, y, z and 15, id, meta)
+    }
+
+    fun addNametag(x: Double, y: Double, z: Double, text: String) {
+        val chunkX = (x.toInt()) shr 4
+        val chunkZ = (z.toInt()) shr 4
+        val chunkKey = chunkX to chunkZ
+
+        val tag = CompoundTag().apply {
+            putString("id", "ArmorStand")
+            put("Pos", ListTag(DoubleTag::class.java).apply {
+                add(DoubleTag(x + 0.5))
+                add(DoubleTag(y + 0.5))
+                add(DoubleTag(z + 0.5))
+            })
+            putByte("Invisible", 1)
+            putByte("Marker", 1)
+            putByte("NoGravity", 1)
+            putByte("CustomNameVisible", 1)
+            putString("CustomName", text)
+        }
+
+        val chunk = chunks.getOrPut(chunkKey) { ChunkBuffer(chunkX, chunkZ) }
+        chunk.addEntity(tag)
     }
 
     /**
