@@ -42,7 +42,8 @@ class ExportRoom : Command("export") {
             name = roomName,
             width = abs(pos1.x - pos2.x) + 1,
             height = abs(pos1.y - pos2.y) + 1,
-            depth = abs(pos1.z - pos2.z) + 1
+            depth = abs(pos1.z - pos2.z) + 1,
+            checkpoints = listOf()
         )
 
         val blockStructure = BlockStructure(
