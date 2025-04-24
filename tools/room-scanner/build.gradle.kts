@@ -39,6 +39,8 @@ dependencies {
 
     compileOnly("gg.essential:essential-1.8.9-forge:4955+g395141645")
     embed("gg.essential:loader-launchwrapper:1.1.3")
+
+    embed(project(":shared"))
 }
 
 repositories {
