@@ -1,0 +1,20 @@
+name: RoomsPlugin
+version: 1.0.0
+main: dev.spaghett.roomsplugin.RoomsPlugin
+description: PKD Practice Server rooms practice server plugin
+author: _Spqghett1
+website: https://github.com/Real-Parkour-Helper
+
+commands:
+  nextroom:
+    description: Teleport to the next room
+    usage: /nextRoom
+    aliases: [next, nextroom]
+  prevroom:
+    description: Teleport to the previous room
+    usage: /prevRoom
+    aliases: [prev, prevroom]
+  room:
+    description: Teleport to a specific room
+    usage: /room <room>
+    aliases: [room, r]

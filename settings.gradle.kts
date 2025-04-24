@@ -23,3 +23,4 @@ include("tools:world-generator")
 include("tools:room-scanner")
 
 include("plugins:shared-plugin")
+include("plugins:rooms-plugin")
