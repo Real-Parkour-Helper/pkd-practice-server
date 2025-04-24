@@ -1,6 +1,9 @@
 package dev.spaghett.scanner
 
 import com.google.gson.Gson
+import dev.spaghett.shared.BlockEntry
+import dev.spaghett.shared.BlockStructure
+import dev.spaghett.shared.RoomMeta
 import gg.essential.api.commands.Command
 import gg.essential.api.commands.DefaultHandler
 import net.minecraft.client.Minecraft
