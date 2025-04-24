@@ -3,10 +3,7 @@ package dev.spaghett.generator
 import com.google.gson.Gson
 import dev.spaghett.generator.world.WorldBuffer
 import dev.spaghett.generator.world.blockIDs
-import dev.spaghett.shared.BlockStructure
-import dev.spaghett.shared.GeneratedSeed
-import dev.spaghett.shared.RoomMeta
-import dev.spaghett.shared.roomList
+import dev.spaghett.shared.*
 import net.querz.nbt.io.NBTUtil
 import net.querz.nbt.tag.CompoundTag
 import java.io.File
@@ -36,7 +33,7 @@ class RoomGenerator {
      * Builds the map from a given generated seed.
      */
     fun buildMap(seed: GeneratedSeed, worldDir: String, resetCheckpoints: Boolean) {
-        val rooms = seed.rooms.map { readRoom(it) }
+        val rooms = seed.rooms.map { RoomLoader.loadRoom(it) }
 
         val worldBuffer = WorldBuffer()
 
@@ -120,26 +117,6 @@ class RoomGenerator {
         }
 
         NBTUtil.write(root, File(worldDir, "level.dat"))
-    }
-
-
-    /**
-     * Reads a room from the resources folder.
-     */
-    private fun readRoom(roomName: String): Pair<RoomMeta, BlockStructure> {
-        val loader = javaClass.classLoader
-        val stream = loader.getResourceAsStream("pkd-rooms/${roomName}/meta.json")
-
-        val metaReader = InputStreamReader(stream!!, Charsets.UTF_8)
-        val meta = gson.fromJson(metaReader, RoomMeta::class.java)
-        metaReader.close()
-
-        val blocksReader =
-            InputStreamReader(loader.getResourceAsStream("pkd-rooms/${roomName}/blocks.json")!!, Charsets.UTF_8)
-        val blocks = gson.fromJson(blocksReader, BlockStructure::class.java)
-        blocksReader.close()
-
-        return Pair(meta, blocks)
     }
 
 }

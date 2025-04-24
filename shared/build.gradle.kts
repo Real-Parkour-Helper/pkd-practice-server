@@ -9,6 +9,11 @@ repositories {
     mavenCentral()
 }
 
+dependencies {
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation("com.google.code.gson:gson:2.13.0")
+}
+
 kotlin {
     jvmToolchain(8)
 }
