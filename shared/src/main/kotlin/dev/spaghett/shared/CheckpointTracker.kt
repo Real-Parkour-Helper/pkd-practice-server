@@ -11,17 +11,16 @@ class CheckpointTracker(
     private val player: Player,
     private val checkpoints: List<Location>,
     private val onCheckpoint: (Int) -> Unit,
-    private val onFinish: (Long) -> Unit
+    private val onFinish: () -> Unit,
+    private val onVoid: () -> Unit
 ) {
 
     private var currentCheckpointIndex = 0
     private var taskId: Int? = null
-    private var tickCounter = 0
-    private var enteredCheckpointAt = 0L
 
     fun start() {
         reset()
-        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, ::tick, 1L, 1L)
+        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, ::tick, 2L, 2L)
         println("Checkpoint tracking started for ${player.name} with ${checkpoints.size} checkpoints.")
     }
 
@@ -51,31 +50,19 @@ class CheckpointTracker(
         val nextCheckpoint = checkpoints.getOrNull(currentCheckpointIndex + 1) ?: return
 
         if (current.distance(nextCheckpoint) < 2.5) {
-            if (enteredCheckpointAt == 0L) {
-                enteredCheckpointAt = System.currentTimeMillis()
-            }
+            currentCheckpointIndex++
+            player.playSound(player.location, Sound.LEVEL_UP, 1.0f, 1.0f)
 
-            if (tickCounter % 2 == 0) {
-                currentCheckpointIndex++
-                player.playSound(player.location, Sound.LEVEL_UP, 1.0f, 1.0f)
-
-                if (currentCheckpointIndex >= checkpoints.size - 1) {
-                    onFinish(enteredCheckpointAt)
-                } else {
-                    onCheckpoint(currentCheckpointIndex)
-                }
+            if (currentCheckpointIndex >= checkpoints.size - 1) {
+                onFinish()
+            } else {
+                onCheckpoint(currentCheckpointIndex)
             }
-        } else {
-            enteredCheckpointAt = 0L
         }
 
         if (current.y < 0) {
             tpToLastCheckpoint()
-        }
-
-        tickCounter++
-        if (tickCounter % 20 == 0) {
-            tickCounter = 0
+            onVoid()
         }
     }
 

@@ -52,9 +52,9 @@ class RoomsPlugin : JavaPlugin(), Listener {
 
             for (player in Bukkit.getOnlinePlayers()) {
                 val timer = timers[player.name]
-                if (timer != null && !runFinished[player.name]!!) {
-                    val elapsedTime = timer.elapsedTime()
-                    sendActionBar(player, "§b§l$elapsedTime")
+                if (timer != null && !runFinished.getOrDefault(player.name, false)) {
+                    timer.tick()
+                    sendActionBar(player, "§b§l" + timer.getElapsed())
                 }
             }
         }, 0L, 2L)
@@ -94,10 +94,8 @@ class RoomsPlugin : JavaPlugin(), Listener {
                     checkpointTrackers[event.player.name]?.reset()
                     checkpointTrackers[event.player.name]?.tpToLastCheckpoint()
                     event.player.sendMessage("§aYou have been reset to the start.")
-                    if (checkpointTrackers[event.player.name]?.isAtFirstCheckpoint() == true) {
-                        timers[event.player.name]?.start()
-                        runFinished[event.player.name] = false
-                    }
+                    timers[event.player.name]?.start()
+                    runFinished[event.player.name] = false
                 }
 
                 else -> {
@@ -205,15 +203,20 @@ class RoomsPlugin : JavaPlugin(), Listener {
             player,
             nList,
             { checkpoint ->
-                val elapsedTime = timers[player.name]?.elapsedTime() ?: "00:00.000"
+                val elapsedTime = timers[player.name]?.getElapsed() ?: "00:00.000"
                 player.sendMessage("§e§lCHECKPOINT!§r§a You reached checkpoint §6$checkpoint§a in §6$elapsedTime!")
             },
-            { endTime ->
+            {
                 checkpointTrackers[player.name]?.reset()
                 runFinished[player.name] = true
 
-                val time = timers[player.name]?.stop(endTime) ?: "00:00.000"
+                val time = timers[player.name]?.stop() ?: "00:00.000"
                 player.sendMessage("§e§lCOMPLETED!§r§a You completed the room in §6§l$time§r§6!")
+            }, {
+                if (checkpointTrackers[player.name]?.isAtFirstCheckpoint() == true) {
+                    timers[player.name]?.start()
+                    runFinished[player.name] = false
+                }
             }
         )
 
