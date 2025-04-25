@@ -24,3 +24,4 @@ include("tools:room-scanner")
 
 include("plugins:shared-plugin")
 include("plugins:rooms-plugin")
+include("plugins:dynamic-plugin")

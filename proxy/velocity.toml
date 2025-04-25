@@ -79,6 +79,7 @@ enable-player-address-logging = true
 # represents the IP address of the server to connect to.
 lobby = "127.0.0.1:25566"
 rooms = "127.0.0.1:25567"
+dynamic = "127.0.0.1:25568"
 
 # In what order we should try servers when a player logs in or is kicked from a server.
 try = [

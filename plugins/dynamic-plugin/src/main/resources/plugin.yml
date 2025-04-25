@@ -1,0 +1,7 @@
+name: DynamicPlugin
+version: 1.0.0
+main: dev.spaghett.dynamicplugin.DynamicPlugin
+description: PKD Practice Server dynamic server plugin
+author: _Spqghett1
+website: https://github.com/Real-Parkour-Helper
+depend: [ ProtocolLib ]

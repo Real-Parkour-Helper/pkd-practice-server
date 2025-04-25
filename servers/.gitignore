@@ -34,5 +34,7 @@
 **/paper.yml
 **/bukkit.yml
 
+dynamic/seed.json
+
 # A script will have to download this on initial setup
 **/paper-1.8.8-445.jar
