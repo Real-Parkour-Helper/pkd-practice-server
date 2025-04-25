@@ -2,6 +2,7 @@ package dev.spaghett.shared
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -31,16 +32,22 @@ class CheckpointTracker(
     }
 
     fun tpToLastCheckpoint() {
-        teleportToCheckpoint(checkpoints[currentCheckpointIndex])
+        var location = checkpoints[currentCheckpointIndex]
+        if (currentCheckpointIndex != 0) {
+           location = Location(player.world, location.x + 0.5, location.y, location.z + 0.5)
+        }
+        teleportToCheckpoint(location)
+        player.playSound(player.location, Sound.ENDERMAN_TELEPORT, 0.6f, 2.0f)
     }
 
     private fun tick() {
         val current = player.location
         val nextCheckpoint = checkpoints.getOrNull(currentCheckpointIndex + 1) ?: return
 
-        if (current.distance(nextCheckpoint) < 2.0) {
+        if (current.distance(nextCheckpoint) < 2.5) {
             currentCheckpointIndex++
             onCheckpoint(currentCheckpointIndex)
+            player.playSound(player.location, Sound.LEVEL_UP, 1.0f, 1.0f)
 
             if (currentCheckpointIndex >= checkpoints.size - 1) {
                 onFinish()
