@@ -1,0 +1,28 @@
+package dev.spaghett.shared
+
+val checkpointCounts = mapOf(
+    "around_pillars" to 2,
+    "blocks" to 2,
+    "castle_wall" to 2,
+    "early_3+1" to 2,
+    "fence_squeeze" to 2,
+    "fences" to 2,
+    "fortress" to 2,
+    "four_towers" to 3,
+    "rng_skip" to 2,
+    "ice" to 3,
+    "ladder_slide" to 2,
+    "ladder_tower" to 3,
+    "overhead_4b" to 3,
+    "quartz_climb" to 2,
+    "quartz_temple" to 2,
+    "sandpit" to 3,
+    "scatter" to 2,
+    "slime_scatter" to 3,
+    "slime_skip" to 2,
+    "tightrope" to 2,
+    "tower_tightrope" to 2,
+    "triple_platform" to 2,
+    "triple_trapdoors" to 2,
+    "underbridge" to 2,
+)
