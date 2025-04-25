@@ -70,4 +70,7 @@ class CheckpointTracker(
         player.teleport(checkpoint)
     }
 
+    fun currentCP(): Int {
+        return currentCheckpointIndex
+    }
 }
