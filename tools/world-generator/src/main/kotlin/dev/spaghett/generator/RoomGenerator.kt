@@ -31,7 +31,7 @@ class RoomGenerator {
     /**
      * Builds the map from a given generated seed.
      */
-    fun buildMap(seed: GeneratedSeed, worldDir: String, resetCheckpoints: Boolean) {
+    fun buildMap(seed: GeneratedSeed, worldDir: String, resetCheckpoints: Boolean, startRoom: Boolean = false, finishRoom: Boolean = false) {
         val rooms = seed.rooms.map { RoomUtil.loadRoom(it) }
 
         val worldBuffer = WorldBuffer()
@@ -39,43 +39,29 @@ class RoomGenerator {
         var currentRoomZ = 0
         var currentCheckpoint = 1
 
+        if (startRoom) {
+            val (startRoomMeta, startRoomBlocks) = RoomUtil.loadRoom("start_room")
+
+            buildRoom(startRoomMeta, startRoomBlocks, worldBuffer, currentRoomZ, currentCheckpoint)
+            currentRoomZ += startRoomMeta.depth
+        }
+
         for ((roomMeta, blocks) in rooms) {
-            val palette = blocks.palette
-            val reversePalette: Map<Int, String> = palette.entries.associate { (k, v) -> v to k }
-
-            for (block in blocks.blocks) {
-                val x = block.x
-                val y = block.y
-                val z = block.z + currentRoomZ
-
-                val blockName = reversePalette[block.id] ?: continue
-                val blockId = blockIDs[blockName] ?: continue
-
-                val blockMeta = block.meta.toByte()
-                val blockIdByte = blockId.toByte()
-                worldBuffer.setBlock(x, y, z, blockIdByte, blockMeta)
-            }
-
-            for (checkpoint in roomMeta.checkpoints) {
-                val x = checkpoint.x
-                val baseY = checkpoint.y
-                val z = checkpoint.z + currentRoomZ
-
-                // First line: CHECKPOINT (green + bold)
-                val nameTop = "§a§lCHECKPOINT"
-                // Second line: #X (yellow + bold)
-                val nameBottom = "§e§l#${currentCheckpoint++}"
-
-                // Offset the Y to stack them nicely above the checkpoint block
-                worldBuffer.addNametag(x.toDouble(), baseY + 0.5, z.toDouble(), nameTop)
-                worldBuffer.addNametag(x.toDouble(), baseY + 0.2, z.toDouble(), nameBottom)
-            }
+            buildRoom(roomMeta, blocks, worldBuffer, currentRoomZ, currentCheckpoint)
 
             currentRoomZ += roomMeta.depth
 
             if (resetCheckpoints) {
                 currentCheckpoint = 1
+            } else {
+                currentCheckpoint += roomMeta.checkpoints.size
             }
+        }
+
+        if (finishRoom) {
+            val (finishRoomMeta, finishRoomBlocks) = RoomUtil.loadRoom("finish_room")
+
+            buildRoom(finishRoomMeta, finishRoomBlocks, worldBuffer, currentRoomZ, currentCheckpoint)
         }
 
         val regionFolder = File(worldDir, "region")
@@ -83,6 +69,43 @@ class RoomGenerator {
         worldBuffer.writeAllRegions(regionFolder)
 
         writeLevelDat(worldDir)
+    }
+
+    private fun buildRoom(roomMeta: RoomMeta, blocks: BlockStructure, worldBuffer: WorldBuffer, zOffset: Int, startCheckpoint: Int) {
+        val palette = blocks.palette
+        val reversePalette: Map<Int, String> = palette.entries.associate { (k, v) -> v to k }
+
+        for (block in blocks.blocks) {
+            val x = block.x
+            val y = block.y
+            val z = block.z + zOffset
+
+            val blockName = reversePalette[block.id] ?: continue
+            val blockId = blockIDs[blockName] ?: continue
+
+            val blockMeta = block.meta.toByte()
+            val blockIdByte = blockId.toByte()
+            worldBuffer.setBlock(x, y, z, blockIdByte, blockMeta)
+        }
+
+        if (roomMeta.checkpoints.isEmpty() || roomMeta.name == "finish_room") {
+            return
+        }
+
+        for ((checkpointIdx, checkpoint) in roomMeta.checkpoints.withIndex()) {
+            val x = checkpoint.x
+            val baseY = checkpoint.y
+            val z = checkpoint.z + zOffset
+
+            // First line: CHECKPOINT (green + bold)
+            val nameTop = "§a§lCHECKPOINT"
+            // Second line: #X (yellow + bold)
+            val nameBottom = "§e§l#${startCheckpoint + checkpointIdx}"
+
+            // Offset the Y to stack them nicely above the checkpoint block
+            worldBuffer.addNametag(x.toDouble(), baseY + 0.5, z.toDouble(), nameTop)
+            worldBuffer.addNametag(x.toDouble(), baseY + 0.2, z.toDouble(), nameBottom)
+        }
     }
 
     /**
