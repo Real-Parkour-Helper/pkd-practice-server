@@ -1,5 +1,9 @@
 package dev.spaghett.roomsplugin
 
+import com.comphenix.protocol.PacketType
+import com.comphenix.protocol.ProtocolLibrary
+import com.comphenix.protocol.events.PacketContainer
+import com.comphenix.protocol.wrappers.WrappedChatComponent
 import dev.spaghett.roomsplugin.commands.NextRoomCommand
 import dev.spaghett.roomsplugin.commands.PrevRoomCommand
 import dev.spaghett.roomsplugin.commands.RoomCommand
@@ -11,11 +15,12 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener
-import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.util.Vector
+
 
 class RoomsPlugin : JavaPlugin(), Listener {
     private val startPosition = Triple(18.5, 8.0, 2.5)
@@ -25,6 +30,9 @@ class RoomsPlugin : JavaPlugin(), Listener {
         mutableMapOf() // player.name -> CheckpointTracker
     private var boostTrackers = mutableMapOf<String, BoostTracker>() // player.name -> ParkourBoost
     private var parkourInventories = mutableMapOf<String, ParkourInventory>() // player.name -> ParkourInventory
+
+    private var timers = mutableMapOf<String, RunTimer>() // player.name -> RunTimer
+    private var runFinished = mutableMapOf<String, Boolean>() // player.name -> finished
 
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this)
@@ -41,7 +49,15 @@ class RoomsPlugin : JavaPlugin(), Listener {
             world?.setStorm(false)
             world?.isThundering = false
             world?.time = 1000
-        }, 0L, 5L)
+
+            for (player in Bukkit.getOnlinePlayers()) {
+                val timer = timers[player.name]
+                if (timer != null && !runFinished[player.name]!!) {
+                    val elapsedTime = timer.elapsedTime()
+                    sendActionBar(player, "§b§l$elapsedTime")
+                }
+            }
+        }, 0L, 2L)
     }
 
     @EventHandler
@@ -67,6 +83,10 @@ class RoomsPlugin : JavaPlugin(), Listener {
                     // Reset to the last checkpoint
                     checkpointTrackers[event.player.name]?.tpToLastCheckpoint()
                     event.player.sendMessage("§aReset you to your last checkpoint.")
+                    if (checkpointTrackers[event.player.name]?.isAtFirstCheckpoint() == true) {
+                        timers[event.player.name]?.start()
+                        runFinished[event.player.name] = false
+                    }
                 }
 
                 Material.REDSTONE_BLOCK -> {
@@ -74,6 +94,10 @@ class RoomsPlugin : JavaPlugin(), Listener {
                     checkpointTrackers[event.player.name]?.reset()
                     checkpointTrackers[event.player.name]?.tpToLastCheckpoint()
                     event.player.sendMessage("§aYou have been reset to the start.")
+                    if (checkpointTrackers[event.player.name]?.isAtFirstCheckpoint() == true) {
+                        timers[event.player.name]?.start()
+                        runFinished[event.player.name] = false
+                    }
                 }
 
                 else -> {
@@ -181,14 +205,39 @@ class RoomsPlugin : JavaPlugin(), Listener {
             player,
             nList,
             { checkpoint ->
-                player.sendMessage("§e§lCHECKPOINT!§r§a You have reached checkpoint §6$checkpoint§a!")
+                val elapsedTime = timers[player.name]?.elapsedTime() ?: "00:00.000"
+                player.sendMessage("§e§lCHECKPOINT!§r§a You reached checkpoint §6$checkpoint§a in §6$elapsedTime!")
             },
-            { ->
-                println("Player ${player.name} finished the parkour run!")
+            { endTime ->
                 checkpointTrackers[player.name]?.reset()
+                runFinished[player.name] = true
+
+                val time = timers[player.name]?.stop(endTime) ?: "00:00.000"
+                player.sendMessage("§e§lCOMPLETED!§r§a You completed the room in §6§l$time§r§6!")
             }
         )
 
         checkpointTrackers[player.name]?.start()
+        runFinished[player.name] = false
+
+        if (timers[player.name] == null) {
+            timers[player.name] = RunTimer()
+        }
+
+        timers[player.name]?.start()
+    }
+
+    private fun sendActionBar(player: Player, message: String) {
+        val protocolManager = ProtocolLibrary.getProtocolManager()
+
+        val packet = protocolManager.createPacket(PacketType.Play.Server.CHAT)
+        packet.chatComponents.write(0, WrappedChatComponent.fromText(message))
+        packet.bytes.write(0, 2.toByte())
+
+        try {
+            protocolManager.sendServerPacket(player, packet)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
