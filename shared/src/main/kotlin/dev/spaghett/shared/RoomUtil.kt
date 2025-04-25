@@ -33,7 +33,7 @@ object RoomUtil {
             val zOffset = index * 57
 
             for (checkpoint in roomMeta.checkpoints) {
-                val location = Location(player.world, checkpoint.x.toDouble() + 0.5, checkpoint.y.toDouble(), checkpoint.z.toDouble() + 0.5 + zOffset)
+                val location = Location(player.world, checkpoint.x.toDouble(), checkpoint.y.toDouble(), checkpoint.z.toDouble() + zOffset)
                 list.add(location)
             }
         }
