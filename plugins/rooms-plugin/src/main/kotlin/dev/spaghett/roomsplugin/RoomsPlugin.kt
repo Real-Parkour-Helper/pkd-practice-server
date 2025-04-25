@@ -21,7 +21,8 @@ class RoomsPlugin : JavaPlugin(), Listener {
     private val startPosition = Triple(18.5, 8.0, 2.5)
     private var currentRoom = mutableMapOf<String, String>()
 
-    private var checkpointTrackers: MutableMap<String, CheckpointTracker> = mutableMapOf() // player.name -> CheckpointTracker
+    private var checkpointTrackers: MutableMap<String, CheckpointTracker> =
+        mutableMapOf() // player.name -> CheckpointTracker
     private var boostTrackers = mutableMapOf<String, BoostTracker>() // player.name -> ParkourBoost
     private var parkourInventories = mutableMapOf<String, ParkourInventory>() // player.name -> ParkourInventory
 
@@ -61,17 +62,20 @@ class RoomsPlugin : JavaPlugin(), Listener {
                     // Boost the player
                     boostTrackers[event.player.name]?.tryBoost()
                 }
+
                 Material.GOLD_PLATE -> {
                     // Reset to the last checkpoint
                     checkpointTrackers[event.player.name]?.tpToLastCheckpoint()
                     event.player.sendMessage("§aReset you to your last checkpoint.")
                 }
+
                 Material.REDSTONE_BLOCK -> {
                     // Reset to the start
                     checkpointTrackers[event.player.name]?.reset()
                     checkpointTrackers[event.player.name]?.tpToLastCheckpoint()
                     event.player.sendMessage("§aYou have been reset to the start.")
                 }
+
                 else -> {
                     // Do nothing
                 }
@@ -147,7 +151,8 @@ class RoomsPlugin : JavaPlugin(), Listener {
 
         currentRoom[player.name] = roomName
         val zOffset = roomList.indexOf(roomName) * 57
-        val newLocation = Location(player.world, startPosition.first, startPosition.second, startPosition.third + zOffset)
+        val newLocation =
+            Location(player.world, startPosition.first, startPosition.second, startPosition.third + zOffset)
 
         val chunk = newLocation.chunk
         if (!chunk.isLoaded) {
@@ -176,7 +181,7 @@ class RoomsPlugin : JavaPlugin(), Listener {
             player,
             nList,
             { checkpoint ->
-                println("Player ${player.name} reached checkpoint $checkpoint")
+                player.sendMessage("§e§lCHECKPOINT!§r§a You have reached checkpoint §6$checkpoint§a!")
             },
             { ->
                 println("Player ${player.name} finished the parkour run!")
