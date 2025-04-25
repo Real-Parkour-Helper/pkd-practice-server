@@ -7,6 +7,7 @@ version = "1.0"
 
 repositories {
     mavenCentral()
+    maven("https://repo.dmulloy2.net/repository/public/")
 
     maven {
         name = "papermc"
@@ -19,6 +20,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.13.0")
 
     compileOnly("org.github.paperspigot:paperspigot-api:1.8.8-R0.1-20160806.221350-1")
+    compileOnly("com.comphenix.protocol:ProtocolLib:4.2.1")
 }
 
 kotlin {

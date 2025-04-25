@@ -4,7 +4,7 @@ main: dev.spaghett.roomsplugin.RoomsPlugin
 description: PKD Practice Server rooms practice server plugin
 author: _Spqghett1
 website: https://github.com/Real-Parkour-Helper
-
+depend: [ ProtocolLib ]
 commands:
   nextroom:
     description: Teleport to the next room
