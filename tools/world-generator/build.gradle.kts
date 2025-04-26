@@ -27,6 +27,32 @@ dependencies {
     implementation(project(":shared"))
 }
 
+tasks.jar {
+    manifest {
+        attributes(
+            "Main-Class" to "dev.spaghett.generator.MainKt"
+        )
+    }
+}
+
+tasks.register<Jar>("fatJar") {
+    group = "build"
+    description = "Assembles a fat jar including all dependencies."
+
+    manifest {
+        attributes["Main-Class"] = application.mainClass.get()
+    }
+
+    from(sourceSets.main.get().output)
+
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 kotlin {
     jvmToolchain(23)
 }
