@@ -18,27 +18,16 @@ repositories {
 dependencies {
     implementation("io.javalin:javalin:6.6.0")
     implementation("org.slf4j:slf4j-simple:2.0.16")
-
-    // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation("com.google.code.gson:gson:2.13.0")
-
     implementation("com.github.Querz:NBT:6.1")
-
     implementation(project(":shared"))
 }
 
-tasks.jar {
-    manifest {
-        attributes(
-            "Main-Class" to "dev.spaghett.generator.MainKt"
-        )
-    }
+kotlin {
+    jvmToolchain(23)
 }
 
-tasks.register<Jar>("fatJar") {
-    group = "build"
-    description = "Assembles a fat jar including all dependencies."
-
+tasks.jar {
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
     }
@@ -47,12 +36,18 @@ tasks.register<Jar>("fatJar") {
 
     dependsOn(configurations.runtimeClasspath)
     from({
-        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+        configurations.runtimeClasspath.get()
+            .filter { it.name.endsWith("jar") }
+            .map { zipTree(it) }
     })
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-kotlin {
-    jvmToolchain(23)
+tasks.register<Copy>("copyJar") {
+    dependsOn("build") // make sure the jar exists
+
+    from(tasks.named<Jar>("jar"))
+    into(rootDir.resolve("tools"))
+    rename { "world-generator.jar" }
 }
