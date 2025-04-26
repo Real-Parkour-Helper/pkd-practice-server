@@ -49,6 +49,8 @@ repositories {
 
 tasks {
     jar {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        
         from(embed.files.map { zipTree(it) })
 
         manifest.attributes(
