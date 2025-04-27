@@ -1,7 +1,7 @@
 package dev.spaghett.lobbyplugin
 
 import com.google.gson.Gson
-import dev.spaghett.lobbyplugin.commands.PlayCommand
+import dev.spaghett.lobbyplugin.commands.*
 import dev.spaghett.shared.GeneratedSeed
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
@@ -25,6 +25,11 @@ class LobbyPlugin : JavaPlugin(), Listener {
 
         // Register commands
         getCommand("play")?.executor = PlayCommand(this)
+        getCommand("playseed")?.executor = PlaySeedCommand(this)
+        getCommand("playrooms")?.executor = PlayRoomsCommand(this)
+        getCommand("playroomsseed")?.executor = PlayRoomsSeedCommand(this)
+        getCommand("playcustom")?.executor = PlayCustomCommand(this)
+
     }
 
     override fun onDisable() {
