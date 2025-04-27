@@ -5,3 +5,8 @@ description: PKD Practice Server dynamic server plugin
 author: _Spqghett1
 website: https://github.com/Real-Parkour-Helper
 depend: [ ProtocolLib ]
+
+commands:
+  cooldown:
+    description: Set the boost cooldown
+    usage: /cooldown <seconds>

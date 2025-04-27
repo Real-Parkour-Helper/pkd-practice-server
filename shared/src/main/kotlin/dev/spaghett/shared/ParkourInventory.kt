@@ -40,6 +40,32 @@ class ParkourInventory(
         player.updateInventory() // Force the client to update
     }
 
+    fun toggleBoostItem(ready: Boolean) {
+        val inv = player.inventory
+        val currentItem = inv.getItem(0)
+
+        if (ready) {
+            if (currentItem == null || currentItem.type != Material.FEATHER) {
+                val customItem = ItemStack(Material.FEATHER).apply {
+                    itemMeta = itemMeta?.apply {
+                        displayName = "§b§lBoost"
+                    }
+                }
+                inv.setItem(0, customItem)
+            }
+        } else {
+            if (currentItem == null || currentItem.type != Material.GHAST_TEAR) {
+                val customItem = ItemStack(Material.GHAST_TEAR).apply {
+                    itemMeta = itemMeta?.apply {
+                        displayName = "§c§lBoost (Cooldown)"
+                    }
+                }
+                inv.setItem(0, customItem)
+            }
+        }
+        player.updateInventory() // Force the client to update
+    }
+
     @EventHandler
     fun onDrop(event: PlayerDropItemEvent) {
         val item = event.itemDrop.itemStack

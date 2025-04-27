@@ -3,18 +3,25 @@ package dev.spaghett.shared
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.events.PacketContainer
+import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.util.Vector
+import org.bukkit.inventory.ItemStack
+import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.scheduler.BukkitRunnable
+import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
 class BoostTracker(
     private val player: Player,
-    private val boostCooldown: Long,
-    private val onBoost: () -> Unit
+    private var boostCooldown: Long,
+    private val plugin: JavaPlugin,
+    private val onBoost: () -> Unit,
+    private val onCooldownEnd: () -> Unit
 ) {
     private var lastBoostTime: Long = 0L
+    private var cooldownTask: BukkitRunnable? = null
 
     fun tryBoost(): Boolean {
         val currentTime = System.currentTimeMillis()
@@ -22,9 +29,14 @@ class BoostTracker(
             boostPlayer(player)
             lastBoostTime = currentTime
             onBoost()
+            startCooldownUpdater()
             return true
         }
         return false
+    }
+
+    fun setCooldown(cooldown: Long) {
+        boostCooldown = cooldown
     }
 
 
@@ -64,6 +76,36 @@ class BoostTracker(
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun startCooldownUpdater() {
+        cooldownTask?.cancel()
+
+        cooldownTask = object : BukkitRunnable() {
+            override fun run() {
+                val currentTime = System.currentTimeMillis()
+                val timePassed = currentTime - lastBoostTime
+                val timeLeftMillis = boostCooldown - timePassed
+
+                if (timeLeftMillis <= 0) {
+                    // Cooldown over
+                    player.exp = 0f
+                    player.level = 0
+                    this.cancel()
+                    onCooldownEnd()
+                    return
+                }
+
+                // Update XP Bar
+                val timeLeftSeconds = ceil(timeLeftMillis / 1000.0).toInt()
+                val progress = (timeLeftMillis.toDouble() / boostCooldown.toDouble()).coerceIn(0.0, 1.0)
+
+                player.level = timeLeftSeconds
+                player.exp = progress.toFloat()
+            }
+        }
+
+        cooldownTask!!.runTaskTimer(plugin, 0L, 2L) // update every 2 ticks (~0.1s)
     }
 
     fun reset() {

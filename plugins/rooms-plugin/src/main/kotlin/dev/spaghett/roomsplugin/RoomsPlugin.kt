@@ -67,10 +67,16 @@ class RoomsPlugin : JavaPlugin(), Listener {
 
         boostTrackers[event.player.name] = BoostTracker(
             event.player,
-            1000L
-        ) {
-            println("Player ${event.player.name} boosted!")
-        }
+            1000L,
+            this,
+            {
+                println("Player ${event.player.name} boosted!")
+                parkourInventories[event.player.name]?.toggleBoostItem(false)
+            },
+            {
+                parkourInventories[event.player.name]?.toggleBoostItem(true)
+            }
+        )
 
         parkourInventories[event.player.name] = ParkourInventory(event.player) { item ->
             when (item.type) {
