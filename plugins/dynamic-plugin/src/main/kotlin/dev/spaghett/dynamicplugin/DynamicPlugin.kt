@@ -95,10 +95,6 @@ class DynamicPlugin : JavaPlugin(), Listener {
                     // Reset to the last checkpoint
                     checkpointTrackers[event.player.name]?.tpToLastCheckpoint()
                     event.player.sendMessage("§aReset you to your last checkpoint.")
-                    if (checkpointTrackers[event.player.name]?.isAtFirstCheckpoint() == true) {
-                        timers[event.player.name]?.start()
-                        runFinished[event.player.name] = false
-                    }
                 }
 
                 Material.REDSTONE_BLOCK -> {
@@ -165,10 +161,7 @@ class DynamicPlugin : JavaPlugin(), Listener {
                 val time = timers[event.player.name]?.stop() ?: "00:00.000"
                 event.player.sendMessage("§e§lCOMPLETED!§r§a You completed the parkour in §6§l$time§r§6!")
             }, {
-                if (checkpointTrackers[event.player.name]?.isAtFirstCheckpoint() == true) {
-                    timers[event.player.name]?.start()
-                    runFinished[event.player.name] = false
-                }
+                // nothing on void
             }
         )
 
