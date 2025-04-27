@@ -5,6 +5,7 @@ import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.wrappers.WrappedChatComponent
 import com.google.gson.Gson
 import dev.spaghett.dynamicplugin.commands.CooldownCommand
+import dev.spaghett.dynamicplugin.commands.PingCommand
 import dev.spaghett.shared.*
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
@@ -60,6 +61,7 @@ class DynamicPlugin : JavaPlugin(), Listener {
 
         Bukkit.getPluginManager().registerEvents(this, this)
         getCommand("cooldown")?.executor = CooldownCommand(this)
+        getCommand("ping")?.executor = PingCommand(this)
 
         Bukkit.getScheduler().runTaskTimer(this, {
             // Permanently nice weather
@@ -85,7 +87,6 @@ class DynamicPlugin : JavaPlugin(), Listener {
             60000L,
             this,
             {
-                println("Player ${event.player.name} boosted!")
                 parkourInventories[event.player.name]?.toggleBoostItem(false)
             },
             {
@@ -226,6 +227,10 @@ class DynamicPlugin : JavaPlugin(), Listener {
 
     fun setBoostCooldown(player: Player, time: Long) {
         boostTrackers[player.name]?.setCooldown(time)
+    }
+
+    fun setPing(player: Player, ping: Int) {
+        boostTrackers[player.name]?.setPing(ping)
     }
 
     private fun dropDoor(player: Player, room: Int) {

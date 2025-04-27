@@ -8,10 +8,8 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
-import kotlin.math.ceil
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
+import kotlin.random.Random
 
 class BoostTracker(
     private val player: Player,
@@ -22,14 +20,25 @@ class BoostTracker(
 ) {
     private var lastBoostTime: Long = 0L
     private var cooldownTask: BukkitRunnable? = null
+    private var ping = 0
 
     fun tryBoost(): Boolean {
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastBoostTime >= boostCooldown) {
-            boostPlayer(player)
             lastBoostTime = currentTime
-            onBoost()
-            startCooldownUpdater()
+
+            val delay = if (ping != 0) {
+                simulatePing(ping)
+            } else 0
+
+            val yaw = player.location.yaw.toDouble()
+            val pitch = player.location.pitch.toDouble()
+
+            plugin.runLaterMs(delay.toLong()) {
+                boostPlayer(player, yaw, pitch)
+                onBoost()
+                startCooldownUpdater()
+            }
             return true
         }
         return false
@@ -39,13 +48,31 @@ class BoostTracker(
         boostCooldown = cooldown
     }
 
+    fun setPing(ping: Int) {
+        this.ping = ping
+    }
+
+    private fun simulatePing(mean: Int, fluctuationPercent: Double = 5.0): Int {
+        val margin = mean * fluctuationPercent / 100.0
+        val stddev = margin / 2
+
+        while (true) {
+            val u1 = Random.nextDouble()
+            val u2 = Random.nextDouble()
+            val z0 = sqrt(-2.0 * ln(u1)) * cos(2.0 * Math.PI * u2)
+
+            val sample = mean + z0 * stddev
+            if (sample in (mean - margin)..(mean + margin)) {
+                return sample.roundToInt()
+            }
+        }
+    }
+
 
     /**
      * Sends a precise velocity packet to a player using ProtocolLib
      */
-    private fun boostPlayer(player: Player, magnitude: Int = 12000) {
-        val yaw = player.location.yaw.toDouble()
-        val pitch = player.location.pitch.toDouble()
+    private fun boostPlayer(player: Player, yaw: Double, pitch: Double, magnitude: Int = 12000) {
         val yawRad = Math.toRadians(yaw)
         val pitchRad = Math.toRadians(pitch)
 

@@ -18,3 +18,7 @@ commands:
     description: Teleport to a specific room
     usage: /room <room>
     aliases: [room, r]
+  ping:
+    description: Set the ping to simulate
+    usage: /ping <ping>
+    aliases: [ping, p]

@@ -5,6 +5,7 @@ import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.wrappers.WrappedChatComponent
 import dev.spaghett.roomsplugin.commands.NextRoomCommand
+import dev.spaghett.roomsplugin.commands.PingCommand
 import dev.spaghett.roomsplugin.commands.PrevRoomCommand
 import dev.spaghett.roomsplugin.commands.RoomCommand
 import dev.spaghett.shared.*
@@ -42,6 +43,7 @@ class RoomsPlugin : JavaPlugin(), Listener {
         getCommand("room")?.executor = RoomCommand(this)
         getCommand("nextroom")?.executor = NextRoomCommand(this)
         getCommand("prevroom")?.executor = PrevRoomCommand(this)
+        getCommand("ping")?.executor = PingCommand(this)
 
         Bukkit.getScheduler().runTaskTimer(this, {
             // Permanently nice weather
@@ -70,7 +72,6 @@ class RoomsPlugin : JavaPlugin(), Listener {
             1000L,
             this,
             {
-                println("Player ${event.player.name} boosted!")
                 parkourInventories[event.player.name]?.toggleBoostItem(false)
             },
             {
@@ -135,6 +136,10 @@ class RoomsPlugin : JavaPlugin(), Listener {
         if (event.entity is Player && event.cause == EntityDamageEvent.DamageCause.FALL) {
             event.isCancelled = true
         }
+    }
+
+    fun setPing(player: Player, ping: Int) {
+        boostTrackers[player.name]?.setPing(ping)
     }
 
     /**

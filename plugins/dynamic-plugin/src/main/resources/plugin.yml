@@ -10,3 +10,7 @@ commands:
   cooldown:
     description: Set the boost cooldown
     usage: /cooldown <seconds>
+  ping:
+    description: Set the ping to simulate
+    usage: /ping <ping>
+    aliases: [ ping, p ]
