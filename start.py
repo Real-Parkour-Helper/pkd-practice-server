@@ -1,22 +1,17 @@
 """
 Parkour Duels Practice Server Start Script
-
-This script simply launches the three servers
-and the velocity proxy. You will need the correct
-java versions installed for this to work (8 and 23).
+Improved: Each server/tool runs in its own terminal window.
 """
 
 from rich.console import Console
 from pathlib import Path
 import subprocess
-import threading
-import signal
 import json
 import sys
 import os
+import platform
 
 console = Console()
-
 
 #######################
 ## UTILS
@@ -32,12 +27,13 @@ with open("java_versions.json", "r") as f:
         console.print(f"[red]Error reading java_versions.json: {e}[/red]")
         sys.exit(1)
 
-if 8 not in java_versions:
+if "8" not in java_versions:
     console.print(f"[red]Java 8 not found! Make sure you have Java 8 installed.[/red]")
-    
-if 23 not in java_versions:
-    console.print(f"[red]Java 23 not found! Make sure you have Java 23 installed.[/red]")
+    sys.exit(1)
 
+if "23" not in java_versions:
+    console.print(f"[red]Java 23 not found! Make sure you have Java 23 installed.[/red]")
+    sys.exit(1)
 
 #######################
 ## JARS SETUP
@@ -68,13 +64,6 @@ JARS = [
         "java_version": "8"
     },
     {
-        "name": "dynamic",
-        "jar": PROJECT_ROOT / "servers" / "dynamic" / "paper-1.8.8-445.jar",
-        "cwd": PROJECT_ROOT / "servers" / "dynamic",
-        "memory": "512M",
-        "java_version": "8"
-    },
-    {
         "name": "world-generator",
         "jar": PROJECT_ROOT / "tools" / "world-generator.jar",
         "cwd": PROJECT_ROOT / "tools",
@@ -83,50 +72,43 @@ JARS = [
     },
 ]
 
-def run_jar(server):
-    command = [
-        str(java_versions[server["java_version"]]),
-        f"-Xmx{server['memory']}",
-        "-jar",
-        str(server["jar"]),
-        "nogui"
-    ]
-    process = subprocess.Popen(
-        command,
-        cwd=server["cwd"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-        universal_newlines=True,
-        preexec_fn=os.setsid if os.name != "nt" else None,
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
-    )
-    return process
 
-def stream_output(process, name):
-    try:
-        for line in process.stdout:
-            console.print(f"[bold cyan][{name}][/bold cyan] {line.rstrip()}")
-    except Exception as e:
-        console.print(f"[red][{name}] Output error:[/red] {e}")
-        
+#######################
+## CORE
+#######################
 
-def kill_process(process, name):
-    try:
-        if os.name == "nt":
-            process.send_signal(signal.CTRL_BREAK_EVENT) 
-        else:
-            os.killpg(os.getpgid(process.pid), signal.SIGINT)
-        process.wait(timeout=10)
-    except Exception as e:
-        console.print(f"[yellow]Force killing {name}... ({e})[/yellow]")
-        process.kill()
+def launch_in_new_terminal(server):
+    java_path = java_versions[server["java_version"]]
+    jar_path = server["jar"]
+    cwd = server["cwd"]
+    memory = server["memory"]
+
+    if platform.system() == "Windows":
+        command = f"start \"\" cmd /c \"\"{java_path}\" -Xmx512M -jar \"{jar_path}\"\""
+        subprocess.Popen(
+            command,
+            cwd=cwd,
+            shell=True
+        )
+    elif platform.system() == "Linux":
+        command = f'"{java_path}" -Xmx{memory} -jar "{jar_path}"; exec bash'
+        subprocess.Popen(
+            ["gnome-terminal", "--", "bash", "-c", command],
+            cwd=cwd
+        )
+    elif platform.system() == "Darwin":  # macOS
+        command = f'cd "{cwd}" && "{java_path}" -Xmx{memory} -jar "{jar_path}"'
+        subprocess.Popen([
+            "osascript", "-e",
+            f'tell application "Terminal" to do script "{command}"'
+        ])
+    else:
+        console.print(f"[red]Unsupported OS: {platform.system()}[/red]")
+        sys.exit(1)
+
 
 def main():
     console.print("[green]==== Starting servers and tools ====[/green]")
-
-    processes = []
-    threads = []
 
     for server in JARS:
         if not server["jar"].exists():
@@ -134,26 +116,17 @@ def main():
             sys.exit(1)
 
         console.print(f"[green]Starting {server['name']}...[/green]")
-        process = run_jar(server)
-        processes.append((server["name"], process))
+        launch_in_new_terminal(server)
 
-        t = threading.Thread(target=stream_output, args=(process, server["name"]), daemon=True)
-        t.start()
-        threads.append(t)
-
-    console.print("[bold green]All servers and tools are running! Press Ctrl+C to stop.[/bold green]")
+    console.print("[bold green]All servers and tools launched into new terminals![/bold green]")
+    console.print("[bold yellow]Press Ctrl+C here to exit the launcher script (servers keep running).[/bold yellow]")
 
     try:
         while True:
-            for name, process in processes:
-                if process.poll() is not None:
-                    console.print(f"[red]{name} has stopped unexpectedly![/red]")
-                    sys.exit(1)
+            pass  # Keep the script alive if you want
     except KeyboardInterrupt:
-        console.print("\n[bold yellow]Shutting down all servers gracefully...[/bold yellow]")
-        for name, process in processes:
-            kill_process(process, name)
-        console.print("[bold green]All processes terminated cleanly.[/bold green]")
+        console.print("\n[bold yellow]Launcher script exited. You need to close terminals manually![/bold yellow]")
+
 
 if __name__ == "__main__":
     main()
