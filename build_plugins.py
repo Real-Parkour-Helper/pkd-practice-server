@@ -23,13 +23,15 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 PLUGINS = [
     "shared-plugin",
     "rooms-plugin",
-    "dynamic-plugin"
+    "dynamic-plugin",
+    "lobby-plugin",
 ]
 
 PLUGIN_TARGETS = {
     "shared-plugin": ["servers/lobby/plugins", "servers/rooms/plugins", "servers/dynamic/plugins"],
     "rooms-plugin": ["servers/rooms/plugins"],
     "dynamic-plugin": ["servers/dynamic/plugins"],
+    "lobby-plugin": ["servers/lobby/plugins"],
 }
 
 #######################
