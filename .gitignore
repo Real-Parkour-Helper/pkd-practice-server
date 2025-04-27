@@ -5,3 +5,5 @@
 .kotlin
 build/
 tools/*.jar
+
+java_versions.json

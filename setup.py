@@ -14,9 +14,12 @@ up for development, you should do it yourself.
 from rich.console import Console
 from datetime import datetime
 from pathlib import Path
+import subprocess
 import requests
+import platform
 import base64
 import shutil
+import json
 import sys
 import os
 
@@ -188,6 +191,90 @@ class VelocitySecretTask(Task):
             return False
 
 
+class DiscoverJavaVersions(Task):
+    def __init__(self):
+        super().__init__("Discover Java versions")
+        self.lobbyConfig = SERVERS / "lobby" / "plugins" / "LobbyPlugin" / "config.yml"
+
+    def checks(self):
+        # This task does not need to be run
+        if os.path.exists("java_versions.json"):
+            with open("java_versions.json", "r") as f:
+                try:
+                    data = json.load(f)
+                    if 8 in data and 23 in data:
+                        return False
+                except json.JSONDecodeError:
+                    console.print(
+                        f"[red]Error: Failed to decode java_versions.json. Will run task...[/red]"
+                    )
+                    return True
+        else:
+            return True
+
+        if os.path.exists(self.lobbyConfig):
+            with open(self.lobbyConfig, "r") as f:
+                data = f.read()
+                if "java8_version" in data:
+                    return False
+        return True
+
+    def task(self):
+        java_paths = []
+
+        system = platform.system()
+        if system == "Windows":
+            program_files = [os.environ.get('ProgramFiles'), os.environ.get('ProgramFiles(x86)')]
+            for pf in program_files:
+                if pf:
+                    java_paths += list(Path(pf).rglob("java.exe"))
+        else:
+            java_paths += list(Path("/usr/bin").glob("java*"))
+            java_paths += list(Path("/usr/local/bin").glob("java*"))
+
+        java_in_path = shutil.which("java")
+        if java_in_path:
+            java_paths.append(Path(java_in_path))
+
+        detected = {}
+
+        for java_path in java_paths:
+            try:
+                result = subprocess.run(
+                    [str(java_path), "-version"],
+                    capture_output=True,
+                    text=True
+                )
+                version_output = result.stderr if result.stderr else result.stdout
+
+                if "version" in version_output:
+                    if '"1.8' in version_output:
+                        detected[8] = java_path
+                    elif '"23' in version_output:
+                        detected[23] = java_path
+
+            except Exception as e:
+                continue
+
+        string_paths = {}
+        for version, path in detected.items():
+            string_paths[version] = str(path)
+
+        with open("java_versions.json", "w") as f:
+            f.write(json.dumps(string_paths, indent=2))
+
+        if 8 not in detected:
+            console.print(f"[red]Java 8 not found! Make sure you have Java 8 installed.[/red]")
+            return False
+
+        if not os.path.exists(self.lobbyConfig):
+            os.makedirs(str(self.lobbyConfig).replace("config.yml", ""), exist_ok=True)
+
+        with open(self.lobbyConfig, "w") as f:
+            f.write(f"java8_path: \"{string_paths[8].replace("\\", "\\\\")}\"\n")
+
+        return True
+
 #######################
 ## MAIN
 #######################
@@ -214,6 +301,8 @@ defaultRoomsTask = DefaultFilesTask(SERVERS / "rooms")
 
 velocitySecretTask = VelocitySecretTask(VELOCITY)
 
+discoverJavaTask = DiscoverJavaVersions()
+
 tasks = [
     velocityTask,
     paperTask,
@@ -222,6 +311,7 @@ tasks = [
     defaultDynamicTask,
     defaultRoomsTask,
     velocitySecretTask,
+    discoverJavaTask
 ]
 
 # Run tasks
