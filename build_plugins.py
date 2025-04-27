@@ -38,6 +38,12 @@ PLUGIN_TARGETS = {
 ## MAIN
 #######################
 
+def clear_console():
+    system = platform.system()
+    if system == "Windows":
+        subprocess.run("cls", shell=True)
+    else:
+        subprocess.run("clear", shell=True)
 
 def gradlew(*args):
     system = platform.system()
@@ -45,15 +51,19 @@ def gradlew(*args):
         gradlew_file = PROJECT_ROOT / "gradlew.bat"
     else:
         gradlew_file = PROJECT_ROOT / "gradlew"
-        
+
     command = [str(PROJECT_ROOT / gradlew_file)] + list(args)
-    result = subprocess.run(command, cwd=PROJECT_ROOT, capture_output=True, text=True)
-    if result.returncode != 0:
-        console.print(
-            f"[bold red]Gradle failed:[/bold red]\n{result.stdout}\n{result.stderr}"
-        )
+
+    # Stream output live instead of capturing
+    process = subprocess.Popen(command, cwd=PROJECT_ROOT)
+
+    # Wait for it to finish
+    process.wait()
+
+    if process.returncode != 0:
+        console.print(f"[bold red]Gradle failed for command: {' '.join(args)}[/bold red]")
         raise Exception("Gradle build failed")
-    return result
+
 
 
 def find_built_jar(plugin_name):
@@ -80,6 +90,7 @@ def main():
     for plugin_name in PLUGINS:
         console.print(f"[cyan]Building {plugin_name}...[/cyan]")
         gradlew(f":plugins:{plugin_name}:build")
+        clear_console()
 
     # 2. Copy plugins
     for plugin_name in PLUGINS:
