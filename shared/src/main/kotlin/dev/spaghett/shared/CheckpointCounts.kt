@@ -23,6 +23,6 @@ val checkpointCounts = mapOf(
     "tightrope" to 2,
     "tower_tightrope" to 2,
     "triple_platform" to 2,
-    "triple_trapdoors" to 2,
+    "triple_trapdoor" to 2,
     "underbridge" to 2,
 )
