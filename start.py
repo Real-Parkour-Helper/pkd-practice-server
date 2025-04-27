@@ -10,9 +10,8 @@ from rich.console import Console
 from pathlib import Path
 import subprocess
 import threading
-import platform
-import shutil
 import signal
+import json
 import sys
 import os
 
@@ -23,47 +22,15 @@ console = Console()
 ## UTILS
 #######################
 
-def detect_java_versions():
-    java_paths = []
+java_versions = {}
 
-    system = platform.system()
-    if system == "Windows":
-        program_files = [os.environ.get('ProgramFiles'), os.environ.get('ProgramFiles(x86)')]
-        for pf in program_files:
-            if pf:
-                java_paths += list(Path(pf).rglob("java.exe"))
-    else:
-        java_paths += list(Path("/usr/bin").glob("java*"))
-        java_paths += list(Path("/usr/local/bin").glob("java*"))
-
-    java_in_path = shutil.which("java")
-    if java_in_path:
-        java_paths.append(Path(java_in_path))
-
-    detected = {}
-
-    for java_path in java_paths:
-        try:
-            result = subprocess.run(
-                [str(java_path), "-version"],
-                capture_output=True,
-                text=True
-            )
-            version_output = result.stderr if result.stderr else result.stdout
-
-            if "version" in version_output:
-                if '"1.8' in version_output:
-                    detected[8] = java_path
-                elif '"23' in version_output:
-                    detected[23] = java_path
-
-        except Exception as e:
-            continue
-
-    return detected
-
-
-java_versions = detect_java_versions()
+with open("java_versions.json", "r") as f:
+    d = f.read()
+    try:
+        java_versions = json.loads(d)
+    except json.JSONDecodeError as e:
+        console.print(f"[red]Error reading java_versions.json: {e}[/red]")
+        sys.exit(1)
 
 if 8 not in java_versions:
     console.print(f"[red]Java 8 not found! Make sure you have Java 8 installed.[/red]")
@@ -84,35 +51,35 @@ JARS = [
         "jar": PROJECT_ROOT / "proxy" / "velocity-3.4.0-SNAPSHOT-496.jar",
         "cwd": PROJECT_ROOT / "proxy",
         "memory": "512M",
-        "java_version": 23
+        "java_version": "23"
     },
     {
         "name": "lobby",
         "jar": PROJECT_ROOT / "servers" / "lobby" / "paper-1.8.8-445.jar",
         "cwd": PROJECT_ROOT / "servers" / "lobby",
         "memory": "512M",
-        "java_version": 8
+        "java_version": "8"
     },
     {
         "name": "rooms",
         "jar": PROJECT_ROOT / "servers" / "rooms" / "paper-1.8.8-445.jar",
         "cwd": PROJECT_ROOT / "servers" / "rooms",
         "memory": "512M",
-        "java_version": 8
+        "java_version": "8"
     },
     {
         "name": "dynamic",
         "jar": PROJECT_ROOT / "servers" / "dynamic" / "paper-1.8.8-445.jar",
         "cwd": PROJECT_ROOT / "servers" / "dynamic",
         "memory": "512M",
-        "java_version": 8
+        "java_version": "8"
     },
     {
         "name": "world-generator",
         "jar": PROJECT_ROOT / "tools" / "world-generator.jar",
         "cwd": PROJECT_ROOT / "tools",
         "memory": "512M",
-        "java_version": 23
+        "java_version": "23"
     },
 ]
 
