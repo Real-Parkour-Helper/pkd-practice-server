@@ -190,6 +190,9 @@ class DynamicPlugin : JavaPlugin(), Listener {
         textComponent.clickEvent = ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, seed?.seed.toString())
         event.player.sendMessage(textComponent)
 
+        event.player.level = 0
+        event.player.exp = 0f
+
         event.player.teleport(startLocation)
         timers[event.player.name]?.start()
 
@@ -303,6 +306,10 @@ class DynamicPlugin : JavaPlugin(), Listener {
         player.sendMessage("§aYou have been reset to the start.")
         timers[player.name]?.start()
         runFinished[player.name] = false
+
+        boostTrackers[player.name]?.reset()
+        player.level = 0
+        player.exp = 0f
 
         resetDoors(player)
 
