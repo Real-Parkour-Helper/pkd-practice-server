@@ -1,0 +1,23 @@
+name: LobbyPlugin
+version: 1.0.0
+main: dev.spaghett.lobbyplugin.LobbyPlugin
+description: PKD Practice Server lobby plugin
+author: _Spqghett1
+website: https://github.com/Real-Parkour-Helper
+
+commands:
+  play:
+    description: Play a random 8-room seed
+    usage: /play
+  playseed:
+    description: Play a set numeric 8-room seed
+    usage: /playseed <seed>
+  playrooms:
+    description: Play a random seed of a set number of rooms
+    usage: /playrooms <number>
+  playroomsseed:
+    description: Play a set numeric seed of a set number of rooms
+    usage: /playroomsseed <number> <seed>
+  playcustom:
+    description: Play a custom set of any rooms
+    usage: /playcustom <rooms>
