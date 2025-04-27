@@ -44,6 +44,8 @@ class DynamicPlugin : JavaPlugin(), Listener {
     private val clearedDoors = mutableListOf<Triple<Int, Int, Int>>()
 
     override fun onEnable() {
+        saveDefaultConfig()
+
         val seedFile = File("seed.json")
 
         if (seedFile.exists()) {
@@ -93,6 +95,8 @@ class DynamicPlugin : JavaPlugin(), Listener {
                 parkourInventories[event.player.name]?.toggleBoostItem(true)
             }
         )
+
+        boostTrackers[event.player.name]?.setPing(config.getInt("ping"))
 
         parkourInventories[event.player.name] = ParkourInventory(event.player) { item ->
             when (item.type) {
@@ -231,6 +235,8 @@ class DynamicPlugin : JavaPlugin(), Listener {
 
     fun setPing(player: Player, ping: Int) {
         boostTrackers[player.name]?.setPing(ping)
+        config.set("ping", ping)
+        saveConfig()
     }
 
     private fun dropDoor(player: Player, room: Int) {
