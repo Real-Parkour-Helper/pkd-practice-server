@@ -5,6 +5,8 @@ import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.wrappers.WrappedChatComponent
 import com.google.gson.Gson
 import dev.spaghett.shared.*
+import net.md_5.bungee.api.chat.ClickEvent
+import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -177,6 +179,10 @@ class DynamicPlugin : JavaPlugin(), Listener {
             timers[event.player.name] = RunTimer()
         }
 
+        val textComponent = TextComponent("§aYou are playing on the seed ${seed?.seed}! Click here to copy it!")
+        textComponent.clickEvent = ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, seed?.seed.toString())
+        event.player.sendMessage(textComponent)
+
         event.player.teleport(startLocation)
         timers[event.player.name]?.start()
 
@@ -198,6 +204,8 @@ class DynamicPlugin : JavaPlugin(), Listener {
             HandlerList.unregisterAll(it)
             parkourInventories.remove(event.player.name)
         }
+
+        Bukkit.shutdown()
     }
 
     @EventHandler
