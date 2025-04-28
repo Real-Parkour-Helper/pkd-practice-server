@@ -84,7 +84,7 @@ def launch_in_new_terminal(server):
     memory = server["memory"]
 
     if platform.system() == "Windows":
-        command = f"start \"\" cmd /c \"\"{java_path}\" -Xmx512M -jar \"{jar_path}\"\""
+        command = f"start \"{server["name"]}\" cmd /c \"\"{java_path}\" -Xmx512M -jar \"{jar_path}\"\""
         subprocess.Popen(
             command,
             cwd=cwd,
