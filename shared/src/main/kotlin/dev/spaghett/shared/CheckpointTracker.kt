@@ -39,7 +39,7 @@ class CheckpointTracker(
     fun tpToLastCheckpoint() {
         var location = checkpoints[currentCheckpointIndex]
         if (currentCheckpointIndex != 0) {
-           location = Location(player.world, location.x + 0.5, location.y, location.z + 0.5)
+           location = Location(player.world, location.x + 0.5, location.y + 0.5, location.z + 0.5)
         }
         teleportToCheckpoint(location)
         player.playSound(player.location, Sound.ENDERMAN_TELEPORT, 0.6f, 2.0f)
