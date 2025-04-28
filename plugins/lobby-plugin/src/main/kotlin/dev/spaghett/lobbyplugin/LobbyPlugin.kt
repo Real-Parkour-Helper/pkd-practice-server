@@ -3,19 +3,25 @@ package dev.spaghett.lobbyplugin
 import com.google.gson.Gson
 import dev.spaghett.lobbyplugin.commands.*
 import dev.spaghett.shared.GeneratedSeed
+import dev.spaghett.shared.roomList
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.player.AsyncPlayerChatEvent
+import org.bukkit.event.player.PlayerCommandPreprocessEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
+import java.util.*
 
 
 class LobbyPlugin : JavaPlugin(), Listener {
     private val gson = Gson()
     private var dynamicServer: Process? = null
+    private var customRooms = mutableMapOf<String, MutableList<String>>()
 
     override fun onEnable() {
         saveDefaultConfig()
@@ -37,6 +43,74 @@ class LobbyPlugin : JavaPlugin(), Listener {
         dynamicServer?.destroy()
         logger.info("Dynamic server shut down.")
         logger.info("LobbyPlugin disabled.")
+    }
+
+    fun startListeningForRooms(player: Player) {
+        customRooms[player.name] = mutableListOf()
+        player.sendMessage("§aEnter the room names one by one or separated by spaces. Type §l/done§r§a when finished, or §l/cancel§r§a to cancel.")
+    }
+
+    @EventHandler
+    fun onPlayerChat(event: AsyncPlayerChatEvent) {
+        val player = event.player
+        if (customRooms.containsKey(player.name)) {
+            event.isCancelled = true
+            val message = event.message.trim()
+            // Split the message by spaces, allow multiple rooms at once
+            val rooms = message.split(" ")
+            for (room in rooms) {
+                if (!roomList.contains(room)) {
+                    player.sendMessage("§cRoom '$room' does not exist!")
+                    return
+                }
+            }
+            customRooms[player.name]!!.addAll(rooms)
+            player.sendMessage("§aAdded rooms: " + rooms.joinToString(", "))
+
+        }
+    }
+
+    @EventHandler
+    fun onPlayerPreCommand(event: PlayerCommandPreprocessEvent) {
+        val player = event.player
+        if (customRooms.containsKey(player.name)) {
+            event.isCancelled = true
+            val command = event.message.trim()
+
+            if (command.equals("/done", true)) {
+                val rooms: MutableList<String> = customRooms.remove(player.name)!!
+                if (rooms.isEmpty()) {
+                    player.sendMessage("§cYou didn't select any rooms!")
+                } else {
+                    startCustomRun(player, rooms)
+                }
+            } else if (command.equals("/cancel", true)) {
+                customRooms.remove(player.name)
+                player.sendMessage("§cCustom room selection cancelled.")
+            } else {
+                player.sendMessage("§cYou are currently selecting rooms. Type §l/done§r§c to finish or §l/cancel§r§c to cancel.")
+            }
+        }
+    }
+
+    private fun startCustomRun(player: Player, rooms: List<String>) {
+        try {
+            val seed = GeneratedSeed(
+                seed = "custom seed",
+                rooms = rooms,
+                roomCount = rooms.size
+            )
+            buildSeed(seed)
+            val started = startDynamicServer(player)
+            if (!started) {
+                player.sendMessage("§cError starting server.")
+                return
+            }
+        } catch (e: IOException) {
+            player.sendMessage("§cError generating seed: ${e.message}.")
+            player.sendMessage("§cIs the world generator running?")
+            return
+        }
     }
 
     @Throws(IOException::class)
