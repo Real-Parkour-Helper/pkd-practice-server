@@ -1,6 +1,6 @@
 lang
 logs
-plugins/bStats
+plugins
 
 forwarding.secret
 velocity-3.4.0-SNAPSHOT-496.jar
