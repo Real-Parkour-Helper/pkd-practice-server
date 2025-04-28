@@ -284,6 +284,16 @@ velocityTask = DownloadTask(
     str(VELOCITY),
 )
 
+viaVersionTask = DownloadTask(
+    "https://github.com/ViaVersion/ViaVersion/releases/download/5.3.2/ViaVersion-5.3.2.jar",
+    str(VELOCITY / "plugins"),
+)
+
+viaBackwardsTask = DownloadTask(
+    "https://github.com/ViaVersion/ViaBackwards/releases/download/5.3.2/ViaBackwards-5.3.2.jar",
+    str(VELOCITY / "plugins"),
+)
+
 paperTask = DownloadTask(
     "https://api.papermc.io/v2/projects/paper/versions/1.8.8/builds/445/downloads/paper-1.8.8-445.jar",
     [str(SERVERS / "dynamic"), str(SERVERS / "lobby"), str(SERVERS / "rooms")],
@@ -305,6 +315,8 @@ discoverJavaTask = DiscoverJavaVersions()
 
 tasks = [
     velocityTask,
+    viaVersionTask,
+    viaBackwardsTask,
     paperTask,
     protocolLibTask,
     defaultLobbyTask,
