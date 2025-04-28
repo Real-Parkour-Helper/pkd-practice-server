@@ -57,6 +57,10 @@ allocated to it. If you wish to change this, simply edit the `JARS` entries in `
 
 Once everything is running, simply connect to `localhost` in Minecraft and start practicing!
 
+If you aren't able to connect using a modern version of Minecraft on the first run,
+try restarting everything by closing all terminal windows and running `start.py` again.
+If you are still having issues, please open an issue on the issue tracker.
+
 ---
 
 ## Commands
