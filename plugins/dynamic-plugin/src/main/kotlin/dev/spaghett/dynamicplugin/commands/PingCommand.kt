@@ -19,7 +19,7 @@ class PingCommand(private val plugin: DynamicPlugin) : CommandExecutor {
         }
 
         val ping = args[0].toIntOrNull()
-        if (ping == null) {
+        if (ping == null || ping < 0) {
             sender.sendMessage("Please provide a valid ping value.")
             return false
         }
