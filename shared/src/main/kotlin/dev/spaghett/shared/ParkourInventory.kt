@@ -20,6 +20,7 @@ class ParkourInventory(
     private val onInteract: (ItemStack) -> Unit
 ) : Listener {
     private var lastInteract: Long = 0L
+    private var currentHeldSlot: Int = 0
 
     fun setupParkourInventory() {
         val inv = player.inventory
@@ -93,6 +94,17 @@ class ParkourInventory(
     private fun registerPacketListeners(plugin: JavaPlugin) {
         val manager = ProtocolLibrary.getProtocolManager()
 
+        manager.addPacketListener(object : PacketAdapter(plugin, ListenerPriority.HIGHEST,
+            PacketType.Play.Client.HELD_ITEM_SLOT
+        ) {
+            override fun onPacketReceiving(event: PacketEvent) {
+                if (event.player != player) return
+
+                val newSlot = event.packet.integers.read(0)
+                currentHeldSlot = newSlot
+            }
+        })
+
         // Listen to both left and right-click related packets
         manager.addPacketListener(object : PacketAdapter(plugin, ListenerPriority.HIGHEST,
             PacketType.Play.Client.BLOCK_PLACE,
@@ -103,9 +115,10 @@ class ParkourInventory(
                 val player = event.player
                 val packet = event.packet
 
-                val item = player.inventory.itemInHand ?: return
+                val currentItem = player.inventory.getItem(currentHeldSlot)
+                if (currentItem == null || !isParkourItem(currentItem)) return
 
-                if (!isParkourItem(item)) return
+                if (!isParkourItem(currentItem)) return
 
                 val now = System.currentTimeMillis()
 
@@ -116,14 +129,14 @@ class ParkourInventory(
                 when (event.packetType) {
                     PacketType.Play.Client.ARM_ANIMATION -> {
                         // Left click swing
-                        onInteract(item)
+                        onInteract(currentItem)
                     }
 
                     PacketType.Play.Client.BLOCK_PLACE,
                     PacketType.Play.Client.USE_ITEM -> {
                         // Right click with item or placing block
-                        onInteract(item)
-                        println("Right click with item: ${item.type} and packet type: ${event.packetType}")
+                        onInteract(currentItem)
+                        println("Right click with item: ${currentItem.type} and packet type: ${event.packetType}")
                         event.isCancelled = true // optional: block the default action
                     }
                 }
