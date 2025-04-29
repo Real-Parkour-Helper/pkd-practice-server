@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.player.PlayerAnimationEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
@@ -14,6 +15,8 @@ class ParkourInventory(
     private val player: Player,
     private val onInteract: (ItemStack) -> Unit
 ) : Listener {
+    private var lastInteract: Long = 0L
+
     fun setupParkourInventory() {
         val inv = player.inventory
         inv.clear()
@@ -88,6 +91,8 @@ class ParkourInventory(
         val item = event.item ?: return
         val action = event.action
 
+        println("Action: $action, Item: ${item.type}, Player: ${player.name}")
+
         // We only care about left/right click actions
         if (action != Action.RIGHT_CLICK_AIR &&
             action != Action.RIGHT_CLICK_BLOCK &&
@@ -95,10 +100,29 @@ class ParkourInventory(
             action != Action.LEFT_CLICK_BLOCK
         ) return
 
+        lastInteract = System.currentTimeMillis()
+
         if (isParkourItem(item)) {
             event.isCancelled = true
             onInteract(item)
         }
+    }
+
+    @EventHandler
+    fun onSwing(event: PlayerAnimationEvent) {
+        val player = event.player
+        val item = player.itemInHand ?: return
+
+        if (!isParkourItem(item)) return
+
+        if (System.currentTimeMillis() - lastInteract < 100) {
+            return
+        }
+
+        // Debug
+        println("Swing detected with parkour item: ${item.type}, Player: ${player.name}")
+
+        onInteract(item)
     }
 
     private fun isParkourItem(item: ItemStack?): Boolean {
