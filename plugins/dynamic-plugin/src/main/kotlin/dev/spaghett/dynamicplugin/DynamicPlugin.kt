@@ -194,7 +194,10 @@ class DynamicPlugin : JavaPlugin(), Listener {
         event.player.exp = 0f
 
         event.player.teleport(Location(event.player.world, startPosition.first, startPosition.second, startPosition.third))
-        timers[event.player.name]?.start()
+
+        Bukkit.getScheduler().scheduleSyncDelayedTask(this, {
+            timers[event.player.name]?.start()
+        }, 20L)
 
         dropDoor(event.player, 0)
     }
@@ -304,7 +307,9 @@ class DynamicPlugin : JavaPlugin(), Listener {
         checkpointTrackers[player.name]?.reset()
         player.teleport(Location(player.world, startPosition.first, startPosition.second, startPosition.third))
         player.sendMessage("§aYou have been reset to the start.")
-        timers[player.name]?.start()
+        Bukkit.getScheduler().scheduleSyncDelayedTask(this, {
+            timers[player.name]?.start()
+        }, 20L)
         runFinished[player.name] = false
 
         boostTrackers[player.name]?.reset()
