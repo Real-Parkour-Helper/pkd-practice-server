@@ -81,7 +81,7 @@ class RoomsPlugin : JavaPlugin(), Listener {
 
         boostTrackers[event.player.name]?.setPing(config.getInt("ping"))
 
-        parkourInventories[event.player.name] = ParkourInventory(event.player) { item ->
+        parkourInventories[event.player.name] = ParkourInventory(event.player, this) { item ->
             when (item.type) {
                 Material.FEATHER -> {
                     // Boost the player

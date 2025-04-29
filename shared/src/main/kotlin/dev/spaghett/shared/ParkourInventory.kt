@@ -1,18 +1,22 @@
 package dev.spaghett.shared
 
+import com.comphenix.protocol.PacketType
+import com.comphenix.protocol.ProtocolLibrary
+import com.comphenix.protocol.events.ListenerPriority
+import com.comphenix.protocol.events.PacketAdapter
+import com.comphenix.protocol.events.PacketEvent
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.block.Action
 import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.player.PlayerAnimationEvent
 import org.bukkit.event.player.PlayerDropItemEvent
-import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.plugin.java.JavaPlugin
 
 class ParkourInventory(
     private val player: Player,
+    private val plugin: JavaPlugin,
     private val onInteract: (ItemStack) -> Unit
 ) : Listener {
     private var lastInteract: Long = 0L
@@ -41,6 +45,7 @@ class ParkourInventory(
         inv.setItem(6, resetItem)
 
         player.updateInventory() // Force the client to update
+        registerPacketListeners(plugin)
     }
 
     fun toggleBoostItem(ready: Boolean) {
@@ -85,39 +90,45 @@ class ParkourInventory(
         }
     }
 
-    @EventHandler
-    fun onInteract(event: PlayerInteractEvent) {
-        val player = event.player
-        val item = event.item ?: return
-        val action = event.action
+    private fun registerPacketListeners(plugin: JavaPlugin) {
+        val manager = ProtocolLibrary.getProtocolManager()
 
-        // We only care about left/right click actions
-        if (action != Action.RIGHT_CLICK_AIR &&
-            action != Action.RIGHT_CLICK_BLOCK &&
-            action != Action.LEFT_CLICK_AIR &&
-            action != Action.LEFT_CLICK_BLOCK
-        ) return
+        // Listen to both left and right-click related packets
+        manager.addPacketListener(object : PacketAdapter(plugin, ListenerPriority.HIGHEST,
+            PacketType.Play.Client.BLOCK_PLACE,
+            PacketType.Play.Client.USE_ITEM,
+            PacketType.Play.Client.ARM_ANIMATION
+        ) {
+            override fun onPacketReceiving(event: PacketEvent) {
+                val player = event.player
+                val packet = event.packet
 
-        lastInteract = System.currentTimeMillis()
+                val item = player.inventory.itemInHand ?: return
 
-        if (isParkourItem(item)) {
-            event.isCancelled = true
-            onInteract(item)
-        }
-    }
+                if (!isParkourItem(item)) return
 
-    @EventHandler
-    fun onSwing(event: PlayerAnimationEvent) {
-        val player = event.player
-        val item = player.itemInHand ?: return
+                val now = System.currentTimeMillis()
 
-        if (!isParkourItem(item)) return
+                // Debounce to avoid firing both swing and use within a tick
+                if (now - lastInteract < 100) return
+                lastInteract = now
 
-        if (System.currentTimeMillis() - lastInteract < 100) {
-            return
-        }
+                when (event.packetType) {
+                    PacketType.Play.Client.ARM_ANIMATION -> {
+                        // Left click swing
+                        onInteract(item)
+                    }
 
-        onInteract(item)
+                    PacketType.Play.Client.BLOCK_PLACE,
+                    PacketType.Play.Client.USE_ITEM -> {
+                        // Right click with item or placing block
+                        onInteract(item)
+                        println("Right click with item: ${item.type} and packet type: ${event.packetType}")
+                        event.isCancelled = true // optional: block the default action
+                    }
+                }
+            }
+        })
     }
 
     private fun isParkourItem(item: ItemStack?): Boolean {
