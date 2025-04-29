@@ -17,7 +17,7 @@ commands:
     usage: /playrooms <number>
   playroomsseed:
     description: Play a set numeric seed of a set number of rooms
-    usage: /playroomsseed <number> <seed>
+    usage: /playroomsseed <seed> <number>
   playcustom:
     description: Play a custom set of any rooms
     usage: /playcustom <rooms>
