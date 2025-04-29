@@ -49,7 +49,7 @@ class BoostTracker(
     }
 
     fun setPing(ping: Int) {
-        this.ping = ping
+        this.ping = ping / 2
     }
 
     private fun simulatePing(mean: Int, fluctuationPercent: Double = 5.0): Int {
