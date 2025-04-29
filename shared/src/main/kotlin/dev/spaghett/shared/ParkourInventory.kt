@@ -91,8 +91,6 @@ class ParkourInventory(
         val item = event.item ?: return
         val action = event.action
 
-        println("Action: $action, Item: ${item.type}, Player: ${player.name}")
-
         // We only care about left/right click actions
         if (action != Action.RIGHT_CLICK_AIR &&
             action != Action.RIGHT_CLICK_BLOCK &&
@@ -118,9 +116,6 @@ class ParkourInventory(
         if (System.currentTimeMillis() - lastInteract < 100) {
             return
         }
-
-        // Debug
-        println("Swing detected with parkour item: ${item.type}, Player: ${player.name}")
 
         onInteract(item)
     }
