@@ -28,6 +28,36 @@ of Parkour Duels on Hypixel for improved deliberate practice.
 
 Download the latest release and unzip it into its own folder. Then:
 
+#### Step 1. Install Python
+
+Before you do anything else, you need to have Python installed. You have two options to do this:
+
+###### Option A:
+
+Download the installer from [python.org](https://www.python.org/downloads/).
+Make sure to **check the box** that says **"Add Python to PATH"** during installation, or it won't work.
+
+###### Option B (Windows only):
+
+You can also install Python from the Microsoft Store.
+
+#### Step 2. Unzip the release and open a terminal
+
+Unzip the downloaded release into its own folder. On Windows 11, right click anywhere and
+select **Open Terminal**. On Windows 10, click where the address bar is and type `cmd` to open a terminal.
+
+#### Step 3. Install dependencies
+
+In the terminal, you opened, run the following command:
+
+```commandline
+pip install rich requests
+```
+
+#### Step 4. Run the setup script
+
+In the same terminal, run the following command:
+
 ```commandline
 python setup.py
 ```
@@ -88,13 +118,15 @@ If you are still having issues, please open an issue on the issue tracker.
 
 ### Runs Server
 
-| Command  | Description                        |
-|----------|------------------------------------|
-| `/ping`  | Set the ping simulator for boosts. |
-| `/lobby` | Go back to the lobby server        |
+| Command     | Description                                                         |
+|-------------|---------------------------------------------------------------------|
+| `/ping`     | Set the ping simulator for boosts.                                  |
+| `/lobby`    | Go back to the lobby server                                         |
+| `/cooldown` | Set the cooldown for the boost. This does not persist between runs. |
 
 ---
 
 ## Contributing
+
 If you have any ideas for new features or improvements, please open an issue or a pull request.
 If you encounter any bugs, please report them on the issue tracker.
