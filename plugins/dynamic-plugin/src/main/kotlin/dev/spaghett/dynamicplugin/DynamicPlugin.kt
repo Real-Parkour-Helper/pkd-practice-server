@@ -25,7 +25,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 
 class DynamicPlugin : JavaPlugin(), Listener {
-    private val startPosition = Triple(18.5, 7.0, 5.5)
+    private val startPosition = Triple(18.5, 10.0, 4.5)
     private val firstDoor = Triple(18.0, 8.0, 12.0)
 
     private var checkpointTrackers: MutableMap<String, CheckpointTracker> =
@@ -130,7 +130,7 @@ class DynamicPlugin : JavaPlugin(), Listener {
             error("Error making checkpoints!")
         }
 
-        val startLocation = Location(event.player.world, startPosition.first, startPosition.second, startPosition.third)
+        val startLocation = Location(event.player.world, startPosition.first, startPosition.second - 3.0, startPosition.third)
         val startRoomDepth = RoomUtil.loadRoom("start_room").first.depth
         val nList = mutableListOf(startLocation)
         checkpoints.forEach {
@@ -193,7 +193,7 @@ class DynamicPlugin : JavaPlugin(), Listener {
         event.player.level = 0
         event.player.exp = 0f
 
-        event.player.teleport(startLocation)
+        event.player.teleport(Location(event.player.world, startPosition.first, startPosition.second, startPosition.third))
         timers[event.player.name]?.start()
 
         dropDoor(event.player, 0)
@@ -302,7 +302,7 @@ class DynamicPlugin : JavaPlugin(), Listener {
 
     private fun reset(player: Player) {
         checkpointTrackers[player.name]?.reset()
-        checkpointTrackers[player.name]?.tpToLastCheckpoint()
+        player.teleport(Location(player.world, startPosition.first, startPosition.second, startPosition.third))
         player.sendMessage("§aYou have been reset to the start.")
         timers[player.name]?.start()
         runFinished[player.name] = false
