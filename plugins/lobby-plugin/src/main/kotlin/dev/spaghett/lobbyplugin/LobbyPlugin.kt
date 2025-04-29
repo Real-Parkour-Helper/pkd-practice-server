@@ -57,7 +57,7 @@ class LobbyPlugin : JavaPlugin(), Listener {
             event.isCancelled = true
             val message = event.message.trim()
             // Split the message by spaces, allow multiple rooms at once
-            val rooms = message.split(" ")
+            val rooms = message.split(" ").map { it.lowercase() }
             for (room in rooms) {
                 if (!roomList.contains(room)) {
                     player.sendMessage("§cRoom '$room' does not exist!")

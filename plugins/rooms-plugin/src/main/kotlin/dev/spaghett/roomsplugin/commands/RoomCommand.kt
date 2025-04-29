@@ -9,7 +9,7 @@ import org.bukkit.entity.Player
 class RoomCommand(val plugin: RoomsPlugin) : CommandExecutor {
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if (sender is Player) {
-            val roomName = args.joinToString("_")
+            val roomName = args.joinToString("_").lowercase()
             plugin.moveToRoom(sender, roomName)
         }
         return true
